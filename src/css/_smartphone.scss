@@ -1,0 +1,51 @@
+html,
+body {
+    height: 100%;
+}
+
+#ad {
+    position: static;
+    width: 100%;
+}
+#ad img {
+    max-width: calc(100vw - 20px);
+}
+body {
+    width: 100%;
+    font-size: 13px;
+}
+
+#main {
+    width: 100%;
+}
+
+#status,
+#simulator {
+    width: 100%;
+}
+
+.idol {
+    width: 33%;
+}
+
+#matrix {
+    max-width: 100%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+}
+
+#idollist {
+    margin: 0;
+    padding: 10px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: rgba(0, 0, 0, 0.6);
+
+    #idollist_container{
+        background-color: var(--bg-color);
+    }
+}

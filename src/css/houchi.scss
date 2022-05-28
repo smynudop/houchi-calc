@@ -1,0 +1,56 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-color: rgb(227, 229, 233);
+    --highlight: orange;
+}
+
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+input[type="text"],
+input[type="number"] {
+    width: 80px;
+}
+
+#main {
+    padding: 10px;
+}
+
+#simulator,
+#status {
+    width: 640px;
+    border: 2px solid #666;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+
+select {
+    max-width: 150px;
+}
+
+.cute {
+    background-color: #ffb7ff;
+}
+.cool {
+    background-color: #b7ffff;
+}
+.passion {
+    background-color: #ffdbb7;
+}
+
+@import "./header";
+@import "./idolList";
+@import "./notes_bar";
+@import "./skill";
+@import "./table";
+
+@media screen and (max-width: 480px){
+    @import "./smartphone";
+}

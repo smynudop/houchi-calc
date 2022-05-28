@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!--nobanner-->
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>[通常]デレステ放置研究シート</title>
+    </head>
+    <body>
+    <div id="ad">
+        <script type="text/javascript" src="https://cache1.value-domain.com/xa.j?site=mobajinro.s178.xrea.com"></script>
+    </div>
+        <header>
+            <div id="menu">
+                <ul>
+                    <li data-target="usage">つかいかた</li>
+                    <li data-target="memory">編成保存</li>
+                    <!-- <li data-target="makeImage" id="makeImage">画像生成</li> -->
+                    <!--<li data-target="changeLog">更新履歴</li> -->
+                </ul>
+            </div>
+            <div class="header-content" id="header-usage">
+                ・編成枠をクリックして、アイドルを選ぶのじゃ<br />
+                ・シミュレーターの過信は禁物
+            </div>
+            <div class="header-content" id="header-makeImage">
+                <canvas id="unitcanvas" width="640" height="360" style="display:none;"></canvas><br>
+                <canvas id="unitcanvas_simple" width="400" height="225" style="display:none;"></canvas>
+                </div>
+            <div class="header-content" id="header-memory">
+                <input type="text" id="memory-unitname" value="放置ユニット">
+                <input type="button" id="memory-newsave" value="新規保存">
+                <input type="button" id="memory-open" value="開く">
+                <input type="button" id="memory-update" value="更新">
+                <input type="button" id="memory-delete" value="削除">
+                <ul id="memoryList"></ul>
+            </div>
+            <div class="header-content" id="header-changeLog">
+                12/18 計算機仮追加：当てになりません（サマカニは特に）<br>
+                11/21 ごちゃごちゃしてたのを纏めた
+            </div>
+        </header>
+
+        <div id="main">
+
+        <div id="simulator"></div>
+        <div id="status">
+        <div class="status_box">曲の秒数：<input type="number" value="130" id="musictime" /></div><br>
+        <div class="status_box">アピール値:<input type="number" value="230000" id="appeal" /></div><br>
+        <label><input type="checkbox" id="isRezo" />レゾナンス判定</label><br>
+        シミュレータ:<select id="simulator_music"></select>
+        <input type="button" value="全リセット" id="resetAll" />
+        </div>
+        <div id="matrix">
+            <table id="skilltable"></table>
+            </div>
+        <div style="height: 50px"></div>
+        <div id="idollist" class="hide">
+            <div id="idollist_container">
+                <div id="il_unit"></div>
+                <div id="il_tab"></div>
+                <div id="il_list"></div>
+                <div id="il_menubar">
+                    <div id="il_clear" class="button">クリア</div>
+                    <div id="il_close" class="button">閉じる</div>
+                        </div>
+            </div>
+        </div>
+        <div id="skilldetail"></div>
+
+    </div>
+    <script
+    src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+    integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
+    crossorigin="anonymous"></script>
+    </body>
+</html>

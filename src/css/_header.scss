@@ -1,0 +1,84 @@
+/* ヘッダ関係 ここから */
+
+.small {
+    font-size: 11px;
+}
+
+#unitname {
+    font-weight: bold;
+}
+
+header {
+    width: 100%;
+    background-color: var(--bg-color);
+    font-size: 14px;
+    position: relative;
+}
+
+#menu ul {
+    margin: 0;
+    padding-left: 0;
+    font-size: 0;
+}
+
+#menu li {
+    display: inline-block;
+    width: 100px;
+    text-align: center;
+    border-width: 0px 1px;
+    border-color: darkgray;
+    border-style: solid;
+    font-size: 14px;
+    line-height: 24px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#menu li:hover {
+    background-color: darkgray;
+    color: white;
+}
+
+.header-content {
+    padding: 10px;
+    display: none;
+    background-color: var(--bg-color);
+}
+
+#memoryList {
+    margin: 10px 0px 0px;
+    padding-left: 0;
+}
+
+#memoryList li {
+    display: inline-block;
+    width: 100px;
+    height: 30px;
+    line-height: 30px;
+    border: 1px solid #666;
+    border-radius: 5px;
+    text-align: center;
+    margin-right: 5px;
+    user-select: none;
+    cursor: pointer;
+    font-size: 12px;
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+#memoryList li.selected {
+    background-color: #666;
+    color: white;
+}
+
+.status_box {
+    display: inline-block;
+}
+
+#ad {
+    position: absolute;
+    right: 0;
+    top: 24px;
+}
+
+/* ヘッダ関係 ここまで */
