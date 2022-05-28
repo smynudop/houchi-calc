@@ -1,26 +1,19 @@
-import { Unit, activeSkill } from "./houchi"
-import { LIFE_DEFAULT, MUSIC_MAXTIME, SCORES_GRAND, SCORES_NORMAL, keyof } from "./data"
-
-interface iNote {
-    type: string
-    no: number
-    frame: number
-    score?: number
-    result?: "perfect" | "gone" | "guard" | "miss"
-}
-
-interface LongInfo {
-    begin: number
-    end: number
-    isContinue: boolean
-}
+import { Unit } from "./houchi"
+import { keyof } from "./data/data"
+import {
+    SCORES_GRAND,
+    SCORES_NORMAL,
+    SCORE_DEFAULT_GRAND,
+    SCORE_DEFAULT_NORMAL,
+} from "./data/score"
+import { LIFE_DEFAULT, MUSIC_MAXTIME, CONF, DECREASE_LIFE } from "./data/constants"
 
 class Score {
-    notes: iNote[]
+    notes: INote[]
     offset: number
     longInfo: { [key: number]: LongInfo }
 
-    constructor(notes: iNote[], offset: number) {
+    constructor(notes: INote[], offset: number) {
         this.notes = notes
         this.offset = offset
         this.longInfo = {}
@@ -51,7 +44,7 @@ class Score {
      */
     disConnectLong(moment: number) {
         let frame = moment * 30 - this.offset
-        let result: iNote[] = []
+        let result: INote[] = []
 
         for (let k of keyof(this.longInfo)) {
             let li = this.longInfo[k]
@@ -118,9 +111,9 @@ class Music {
     level: number
     name: string
     coefficient: number
-    difficulity: string
-    tapLife: number
-    flickLife: number
+    difficulity: IDifficult
+    liveType: ILiveType
+    decreaseLife: IDecreaseLife
     musictime: number
 
     constructor() {
@@ -128,17 +121,35 @@ class Music {
         this.level = 28
         this.coefficient = 2
         this.difficulity = "master"
-        this.tapLife = 20
-        this.flickLife = 10
+        this.liveType = "normal"
         this.musictime = 121
+        this.decreaseLife = DECREASE_LIFE.normal
     }
 
-    set(name: string, level: number, difficulity: string) {
+    set(name: string, level: number, difficulity: IDifficult) {
         this.name = name
         this.level = level
         this.difficulity = difficulity
 
+        switch (difficulity) {
+            case "piano":
+            case "forte":
+                this.liveType = "grand"
+                break
+
+            default:
+                this.liveType = "normal"
+                break
+        }
+
         this.calcParam()
+    }
+
+    calcParam() {
+        if (this.level in CONF) {
+            this.coefficient = CONF[this.level]
+        }
+        this.decreaseLife = DECREASE_LIFE[this.liveType]
     }
 
     setMusictime(time: number) {
@@ -146,63 +157,16 @@ class Music {
         $("#musictime").val(time)
     }
 
-    notesLife(note: iNote) {
-        let life = 0
-        if (this.difficulity == "forte" || this.difficulity == "piano") {
-            if (note.no == 0) {
-                life = this.tapLife
-            } else {
-                life = this.flickLife
-            }
-        } else {
-            if (note.type == "flick_left" || note.type == "flick_right") {
-                life = this.flickLife
-            } else {
-                life = this.tapLife
-            }
-        }
-        return life
-    }
+    notesLife(note: INote) {
+        switch (this.liveType) {
+            case "grand":
+                return this.decreaseLife[note.type]
 
-    calcParam() {
-        switch (this.level) {
-            case 18:
-                this.coefficient = 1.475
-                break
-            case 25:
-                this.coefficient = 1.85
-                break
-            case 26:
-                this.coefficient = 1.9
-                break
-            case 30:
-                this.coefficient = 2.2
-                break
-            case 31:
-                this.coefficient = 2.3
-                break
-            case 32:
-                this.coefficient = 2.4
-                break
-        }
-
-        switch (this.difficulity) {
-            case "master":
-                this.tapLife = 20
-                this.flickLife = 10
-                break
-            case "witch":
-                this.tapLife = 20
-                this.flickLife = 10
-                break
-            case "master+":
-                this.tapLife = 20
-                this.flickLife = 10
-                break
-            case "forte":
-                this.tapLife = 10
-                this.flickLife = 20
-                break
+            case "normal":
+                if (note.no != 0) {
+                    return this.decreaseLife.long
+                }
+                return this.decreaseLife[note.type]
         }
     }
 }
@@ -241,9 +205,9 @@ export class Simulator {
 
     load() {
         if (this.isGrand) {
-            this.fetch("./score/sbs.json")
+            this.fetch(SCORE_DEFAULT_GRAND)
         } else {
-            this.fetch("./score/us.json")
+            this.fetch(SCORE_DEFAULT_NORMAL)
         }
     }
 
@@ -346,9 +310,9 @@ export class Simulator {
         this.reset()
         for (let moment = 0; moment < this.skills.length; moment++) {
             let skill = this.skills[moment]
-            if (skill.support.num >= 4) {
+            if (skill.support >= 4) {
                 this.perfect(moment, skill)
-            } else if (skill.guard.num > 0) {
+            } else if (skill.guard > 0) {
                 this.guard(moment)
             } else {
                 this.miss(moment)
@@ -406,9 +370,9 @@ export class Simulator {
     }
 
     perfect(moment: number, bonus: activeSkill) {
-        let score = (100 + bonus.score.num) / 100
-        let combo = (100 + bonus.combo.num) / 100
-        let slide = (100 + bonus.slide.num) / 100
+        let score = (100 + bonus.score) / 100
+        let combo = (100 + bonus.combo) / 100
+        let slide = (100 + bonus.slide) / 100
 
         let life = 0
 
@@ -425,7 +389,7 @@ export class Simulator {
 
             n.score = Math.round(this.basicValue * skill_scorebonus * skill_combobonus * combobonus)
             n.result = "perfect"
-            life += bonus.heal.num
+            life += bonus.heal
         }
         this.lifes.push(life)
         $(`#notes_${moment}`).addClass(`notes_perfect`)

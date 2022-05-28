@@ -1,28 +1,9 @@
 import { Simulator } from "./simulator"
-import { MUSIC_MAXTIME, keyof, cards } from "./data"
+import { keyof } from "./data/data"
+import { MUSIC_MAXTIME } from "./data/constants"
 import { Idol, idols, damyidol } from "./idol"
-import { Skill, skillList, IskillFrame, skillLike } from "./skill"
-
-interface eachSkill {
-    name: string
-    num: number
-}
-
-export interface activeSkill {
-    support: eachSkill
-    score: eachSkill
-    combo: eachSkill
-    heal: eachSkill
-    guard: eachSkill
-    boost: eachSkill
-    slide: eachSkill
-}
-
-interface activatedSkill {
-    no: number
-    time: number
-    skill: Skill
-}
+import { Skill, skillList } from "./skill"
+import { cards } from "./data/idol"
 
 class SkillList {
     isGrand: boolean
@@ -141,7 +122,7 @@ export class Unit {
         this.calc()
     }
 
-    forSave(): iMemory {
+    forSave(): IMemory {
         return {
             name: "hogehoge",
             member: this.list.map((i) => i.name),
@@ -149,7 +130,7 @@ export class Unit {
         }
     }
 
-    update(unit: iMemory) {
+    update(unit: IMemory) {
         this.list = unit.member.map((name) => {
             return name in idols ? idols[name] : damyidol
         })
@@ -319,7 +300,7 @@ export class Unit {
     }
 
     save() {
-        let unit: iMemory = {
+        let unit: IMemory = {
             name: "前回保存",
             appeal: this.appeal,
             member: this.list.map((idol) => idol.name),
@@ -357,15 +338,6 @@ export class Unit {
     }
 }
 
-type ITotalSkill = {
-    support: skillLike
-    score: skillLike
-    combo: skillLike
-    heal: skillLike
-    guard: skillLike
-    boost: skillLike
-    slide: skillLike
-}
 class Skills {
     list: Skill[]
     isRezo: boolean
@@ -403,8 +375,8 @@ class Skills {
         )
     }
 
-    sum(type: IskillFrame): skillLike {
-        let sum: skillLike = { name: "rezo", num: 0 }
+    sum(type: ISkillFrame): eachSkill {
+        let sum: eachSkill = { name: "rezo", num: 0 }
         let magicflg = false
         for (let skill of this.list) {
             const value = +skill[type]
@@ -416,11 +388,11 @@ class Skills {
         return sum
     }
 
-    max(type: IskillFrame): skillLike {
-        let max: skillLike = { name: "damy", num: 0 }
+    max(type: ISkillFrame): eachSkill {
+        let max: eachSkill = { name: "damy", num: 0 }
 
         for (let skill of this.list) {
-            const value = +skill[type]
+            const value = skill[type]
 
             if (value > max.num) {
                 max.name = skill.name
@@ -448,27 +420,29 @@ class Skills {
         }
     }
 
-    sumBuff(): ITotalSkill {
+    sumBuff(): activeSkill {
         return {
-            support: this.sum("support"),
-            score: this.sum("score"),
-            combo: this.sum("combo"),
-            heal: this.sum("heal"),
-            guard: this.sum("guard"),
-            boost: this.sum("boost"),
-            slide: this.sum("slide"),
+            support: this.sum("support").num,
+            score: this.sum("score").num,
+            combo: this.sum("combo").num,
+            heal: this.sum("heal").num,
+            guard: this.sum("guard").num,
+            boost: this.sum("boost").num,
+            slide: this.sum("slide").num,
+            cover: 0,
         }
     }
 
-    maxBuff(): ITotalSkill {
+    maxBuff(): activeSkill {
         return {
-            support: this.max("support"),
-            score: this.max("score"),
-            combo: this.max("combo"),
-            heal: this.max("heal"),
-            guard: this.max("guard"),
-            boost: this.max("boost"),
-            slide: this.max("slide"),
+            support: this.max("support").num,
+            score: this.max("score").num,
+            combo: this.max("combo").num,
+            heal: this.max("heal").num,
+            guard: this.max("guard").num,
+            boost: this.max("boost").num,
+            slide: this.max("slide").num,
+            cover: 0,
         }
     }
 
@@ -480,12 +454,12 @@ class Skills {
                 new Skill({
                     name: "rezo",
                     nameja: "レゾナンス",
-                    support: result.support.num,
-                    score: result.score.num,
-                    combo: result.combo.num,
-                    heal: result.heal.num,
-                    guard: result.guard.num,
-                    slide: result.slide.num,
+                    support: result.support,
+                    score: result.score,
+                    combo: result.combo,
+                    heal: result.heal,
+                    guard: result.guard,
+                    slide: result.slide,
                 }),
             ],
             false
@@ -512,11 +486,6 @@ class SkillCalclator {
 
         return skills.maxBuff()
     }
-}
-
-export type IboostEffect = {
-    boost: number
-    cover: number
 }
 
 class Timeline {
@@ -629,12 +598,12 @@ class Matrix {
             .data("skillname", skill.nameja)
     }
 
-    setTotalSkill(moment: number, skill: ITotalSkill) {
+    setTotalSkill(moment: number, skill: activeSkill) {
         $("#notes_" + moment).data(
             "skillname",
-            `スコア${skill.score.num}/コンボ${skill.combo.num}
-サポ${skill.support.num}
-回復${skill.heal.num}/ダメガ${skill.guard.num}`
+            `スコア${skill.score}/コンボ${skill.combo}
+サポ${skill.support}
+回復${skill.heal}/ダメガ${skill.guard}`
         )
     }
 
@@ -851,15 +820,9 @@ class UI {
     }
 }
 
-interface iMemory {
-    name: string
-    appeal: number
-    member: string[]
-}
-
 class Memory {
     unit: Unit
-    list: iMemory[]
+    list: IMemory[]
     isGrand: boolean
     selectedno: number | null
     constructor(parent: Unit, isGrand: boolean) {
@@ -927,7 +890,7 @@ class Memory {
         })
     }
 
-    loadDefault(): iMemory | null {
+    loadDefault(): IMemory | null {
         let name = this.isGrand ? "member_grand" : "member_normal"
         let unitold = localStorage.getItem(name)
 
@@ -944,7 +907,7 @@ class Memory {
         }
     }
 
-    saveDefault(unit: iMemory) {
+    saveDefault(unit: IMemory) {
         this.list[0] = unit
         this.save()
     }
@@ -966,7 +929,7 @@ class Memory {
         localStorage.setItem(name, JSON.stringify(this.list))
     }
 
-    add(unit: iMemory) {
+    add(unit: IMemory) {
         this.list.push(unit)
     }
 }

@@ -1,9 +1,10 @@
-import { Iattr, IskillName, IidolProfile, keyof, cards, atimes } from "./data"
+import { IskillName, keyof, atimes } from "./data/data"
+import { cards } from "./data/idol"
 import { Skill, skillList } from "./skill"
 
 export class Idol {
     name: string
-    attr: Iattr
+    attr: IAttr
     interval: number
     per: string
     secper: string
@@ -26,7 +27,6 @@ export class Idol {
         this.type = type
 
         if (this.secper in atimes[skill.atype]) {
-            //@ts-ignore
             this.atime = atimes[skill.atype][this.secper]
         } else {
             console.warn(this.secper + "に該当するデータが存在しません")

@@ -1,10 +1,9 @@
-import { keyof, skilltypes, Iatype } from "./data"
-import { IboostEffect } from "./houchi"
+import { keyof, skilltypes } from "./data/data"
 
 export class Skill {
     name: string
     nameja: string
-    atype: Iatype
+    atype: IATime
     score: number
     combo: number
     boost: number
@@ -47,10 +46,10 @@ export class Skill {
         newskill.slide = Math.ceil(newskill.slide * per)
         newskill.heal = Math.ceil(newskill.heal * per)
         if (newskill.support) {
-            newskill.support += effect.cover || 0
+            newskill.support += effect.cover
         }
         if (newskill.isheal) {
-            newskill.heal += effect.cover || 0
+            newskill.heal += effect.cover
         }
 
         return newskill
@@ -61,16 +60,9 @@ export class Skill {
     }
 }
 
-export type IskillFrame = keyof Skill
-
 export const skillList: {
     [k: string]: Skill
 } = {}
-
-export type skillLike = {
-    name: string
-    num: number
-}
 
 for (let key of keyof(skilltypes)) {
     let s = new Skill(skilltypes[key])
