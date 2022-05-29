@@ -158,7 +158,7 @@ export const skilltypes = {
     },
 } as const
 
-export type IskillName = keyof typeof skilltypes
+//export type IskillName = keyof typeof skilltypes
 
 export const atimes: Record<IATime, Record<string, number>> = {
     l: {

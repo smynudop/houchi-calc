@@ -1,6 +1,6 @@
-import { IskillName, keyof, atimes } from "./data/data"
+import { keyof, atimes } from "./data/data"
 import { cards } from "./data/idol"
-import { Skill, skillList } from "./skill"
+import { SkillList } from "./skill2"
 
 export class Idol {
     name: string
@@ -8,16 +8,16 @@ export class Idol {
     interval: number
     per: string
     secper: string
-    type: IskillName
+    type: ISkillName
     atime: number
-    skill: Skill
+    skill: ISkill2
 
     constructor(data: IidolProfile) {
         let type = data[4]
-        let skill = skillList[type].copy()
+        let skill = SkillList[type]
 
-        skill.attr = data[1]
-        skill.target = data[1]
+        // skill.attr = data[1]
+        // skill.target = data[1]
 
         this.name = data[0]
         this.attr = data[1]
@@ -63,14 +63,15 @@ export class Idol {
         return this.type == "motif"
     }
 
-    isActiveTiming(sec: number, unitno: number, isGrand: boolean) {
+    isActiveTiming(sec: number, unitno: number, musictime: number, isGrand: boolean) {
         let mod = [2, 1, 0][unitno]
 
         let isTiming = sec % this.interval == 0
         let isNotFirst = sec >= this.interval
         let isMyTurn = !isGrand || (sec / this.interval) % 3 == mod
+        let isNotNearEnd = sec <= musictime - 3
 
-        return isTiming && isNotFirst && isMyTurn
+        return isTiming && isNotFirst && isMyTurn && isNotNearEnd
     }
 
     isActive(moment: number, unitno: number, musictime: number, isGrand: boolean) {

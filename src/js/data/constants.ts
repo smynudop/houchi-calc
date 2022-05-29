@@ -25,6 +25,6 @@ export const DECREASE_LIFE: Record<ILiveType, IDecreaseLife> = {
         long: 10,
         flick_left: 20,
         flick_right: 20,
-        slide: 10,
+        slide: 20,
     },
 }

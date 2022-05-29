@@ -158,16 +158,25 @@ class Music {
     }
 
     notesLife(note: INote) {
+        let result
         switch (this.liveType) {
             case "grand":
-                return this.decreaseLife[note.type]
+                //短フリックはタップ扱い
+                if (note.no == 0) {
+                    return this.decreaseLife.tap
+                }
+                result = this.decreaseLife[note.type]
 
             case "normal":
                 if (note.no != 0) {
-                    return this.decreaseLife.long
+                    result = this.decreaseLife.long
                 }
-                return this.decreaseLife[note.type]
+                result = this.decreaseLife[note.type]
         }
+        if (result === undefined) {
+            console.warn("ライフが取得できません", note.type)
+        }
+        return result
     }
 }
 
@@ -180,7 +189,7 @@ export class Simulator {
     life: number
     lifes: number[]
     unitlife: number
-    skills: activeSkill[]
+    skills: IFinnalySkill[]
     isGrand: boolean
     music: Music
     dangerMoment: number
@@ -268,7 +277,7 @@ export class Simulator {
         this.music.setMusictime(time)
     }
 
-    setSkill(skills: activeSkill[]) {
+    setSkill(skills: IFinnalySkill[]) {
         this.skills = skills
         this.calc()
     }
@@ -309,7 +318,8 @@ export class Simulator {
     calc() {
         this.reset()
         for (let moment = 0; moment < this.skills.length; moment++) {
-            let skill = this.skills[moment]
+            let skill = this.skills[moment](this.life)
+            console.log(moment, skill)
             if (skill.support >= 4) {
                 this.perfect(moment, skill)
             } else if (skill.guard > 0) {

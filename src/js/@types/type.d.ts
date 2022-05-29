@@ -37,19 +37,8 @@ const skillNameList = [
 ] as const
 type ISkillName = typeof skillNameList[number]
 
-interface eachSkill {
-    name: string
-    num: number
-}
-
 type activeSkill = {
     [k in ISkillFrame]: number
-}
-
-interface activatedSkill {
-    no: number
-    time: number
-    skill: Skill
 }
 
 interface INote {
@@ -82,3 +71,39 @@ type IboostEffect = {
 type IDecreaseLife = {
     [k in INoteType]: number
 }
+
+type SkillEffect = Partial<activeSkill>
+type ActivateSkill = (life: number) => SkillEffect
+type ApplySkill = {
+    exec: (life: number) => SkillEffect
+    name: ISkillName
+    nameja: string
+}
+
+interface ApplyResultLog {
+    time: number
+    position: number
+    result: ApplyResponse
+}
+
+type ApplyResponse = {
+    skill: ApplySkill
+    activatedSkill: ActivateSkill[]
+    isEncore: boolean
+}
+
+type ISkill2 = {
+    type: ISkillName
+    nameja: string
+    activeSkill: SkillEffect
+    isMagic: boolean
+    atype: IATime
+    activate(): (life: number) => SkillEffect
+    apply(
+        activateSkillList: ActivateSkill[],
+        ApplyResutLogs: ApplyResultLog[],
+        skills: ISkill2[]
+    ): ApplyResponse
+}
+
+type IFinnalySkill = (life: number) => activeSkill

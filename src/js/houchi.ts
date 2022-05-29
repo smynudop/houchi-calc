@@ -2,89 +2,9 @@ import { Simulator } from "./simulator"
 import { keyof } from "./data/data"
 import { MUSIC_MAXTIME } from "./data/constants"
 import { Idol, idols, damyidol } from "./idol"
-import { Skill, skillList } from "./skill"
 import { cards } from "./data/idol"
-
-class SkillList {
-    isGrand: boolean
-    list: activatedSkill[]
-
-    constructor(isGrand: boolean) {
-        this.isGrand = isGrand
-        this.list = []
-    }
-
-    push(time: number, no: number, skill: Skill) {
-        let askill: activatedSkill = {
-            no: no,
-            time: time,
-            skill: skill,
-        }
-        this.list.push(askill)
-    }
-
-    reset(no: number) {
-        this.list = this.list.filter((s) => s.no != no)
-    }
-
-    encoreSkill(time: number): Skill {
-        let no = [6, 8, 9, 7, 5, 11, 13, 14, 12, 10, 1, 3, 4, 2, 0]
-        let list = this.list
-            .filter((skill) => {
-                return skill.time < time
-            })
-            .sort((a, b) => {
-                if (a.time != b.time) return a.time - b.time
-                return no[a.no] - no[b.no]
-            })
-            .reverse()
-
-        if (!list.length) return skillList.none
-
-        let skill = list[0].skill.copy()
-        skill.nameja = `アンコール(${skill.nameja})`
-        return skill
-    }
-
-    refrainSkill(time: number, no: number): Skill {
-        let unitno = Math.floor(no / 5)
-        let list = this.list
-            .filter((skill) => {
-                return (
-                    skill.time <= time &&
-                    Math.floor(skill.no / 5) == unitno &&
-                    skill.skill.name != "refrain"
-                )
-            })
-            .sort((a, b) => a.time - b.time)
-
-        let max = {
-            score: 0,
-            combo: 0,
-            sname: "なし",
-            cname: "なし",
-        }
-
-        for (let askill of list) {
-            let skill = askill.skill
-            if (max.score < skill.score) {
-                max.score = skill.score
-                max.sname = skill.nameja
-            }
-            if (max.combo < skill.combo) {
-                max.combo = skill.combo
-                max.cname = skill.nameja
-            }
-        }
-
-        return new Skill({
-            name: "refrain",
-            nameja: `リフレイン\n${max.sname}\n${max.cname}`,
-            score: max.score,
-            combo: max.combo,
-        })
-    }
-}
+import { DAMY_APPLY_SKILL, SkillList } from "./skill2"
+import { SkillHelper } from "./skillHelper"
 
 export class Unit {
     isGrand: boolean
@@ -97,7 +17,6 @@ export class Unit {
     isGuestRezo: boolean
     appeal: number
     simulator: Simulator
-    skillList: SkillList
     constructor(isGrand: boolean) {
         this.isGrand = isGrand
 
@@ -110,8 +29,6 @@ export class Unit {
         this.ui = new UI(this.idolnum, this)
         this.memory = new Memory(this, isGrand)
         this.simulator = new Simulator(this, this.appeal, isGrand)
-
-        this.skillList = new SkillList(isGrand)
 
         this.load()
         //this.disp()
@@ -196,88 +113,7 @@ export class Unit {
         if (idol) this.list[no] = idol
         idol = this.list[no]
 
-        let musictime = this.simulator.music.musictime
-
-        let skill = idol.skill
-        let unitno = Math.floor(no / 5)
-
-        this.matrix.resetSkill(no)
-        this.timeline.resetSkill(no)
-
         this.matrix.putIdol(no, idol)
-
-        this.skillList.reset(no)
-
-        if (idol.isMagic) {
-            skill = this.magicSkill(no)
-        }
-
-        for (let moment = 0; moment < MUSIC_MAXTIME * 2; moment++) {
-            if (!idol.isActive(moment, unitno, musictime, this.isGrand)) continue
-            let time = Math.floor(moment / 2)
-
-            let isActiveTiming =
-                idol.isActiveTiming(time, unitno, this.isGrand) && time == moment / 2
-
-            if (isActiveTiming) {
-                if (idol.isEncore) {
-                    skill = this.skillList.encoreSkill(time)
-                }
-                if (idol.isRefrain) {
-                    skill = this.skillList.refrainSkill(time, no)
-                }
-
-                this.skillList.push(time, no, skill)
-            }
-
-            this.timeline.useSkill(moment, no, skill)
-            this.matrix.useSkill(moment, no, skill)
-        }
-    }
-
-    magicSkill(no: number) {
-        let unitno = Math.floor(no / 5)
-        let s = {
-            name: "magic",
-            nameja: "マジック",
-            score: 0,
-            combo: 0,
-            boost: 0,
-            support: 0,
-            heal: 0,
-            cover: 0,
-            guard: 0,
-            slide: 0,
-        }
-        for (let i = 0; i < 5; i++) {
-            let n = unitno * 5 + i
-            let eachSkill = this.list[n].skill
-
-            s.score = Math.max(eachSkill.score, s.score)
-            s.combo = Math.max(eachSkill.combo, s.combo)
-            s.boost = Math.max(eachSkill.boost, s.boost)
-            s.cover = Math.max(eachSkill.cover, s.cover)
-            s.guard = Math.max(eachSkill.guard, s.guard)
-            s.slide = Math.max(eachSkill.slide, s.slide)
-            s.heal = Math.max(eachSkill.heal, s.heal)
-            s.support = Math.max(eachSkill.support, s.support)
-        }
-        s.nameja = `スコア${s.score}/コンボ${s.combo}\nサポ${s.support}/スキブ${s.boost}\n回復${s.heal}/ダメガ${s.guard}`
-        let sk = new Skill(s)
-        return sk
-    }
-
-    reputEncore() {
-        for (let i = 0; i < this.idolnum; i++) {
-            if (this.list[i].isMagic) {
-                this.put(i)
-            }
-        }
-        for (let i = 0; i < this.idolnum; i++) {
-            if (this.list[i].isCopy) {
-                this.put(i)
-            }
-        }
     }
 
     platoon(no: number) {
@@ -321,15 +157,47 @@ export class Unit {
     }
 
     calc() {
-        let skills: activeSkill[] = []
+        let skills: IFinnalySkill[] = []
 
-        this.reputEncore()
+        let musictime = this.simulator.music.musictime
+
+        this.matrix.resetSkill()
+        this.timeline.resetSkill()
+
+        let activateSkillList: ActivateSkill[] = []
+        let applyResutLogList: ApplyResultLog[] = []
+
+        for (let time = 0; time < MUSIC_MAXTIME; time++) {
+            for (let no = 0; no < this.idolnum; no++) {
+                let idol = this.list[no]
+                let unitno = Math.floor(no / 5)
+
+                let isActiveTiming = idol.isActiveTiming(time, unitno, musictime, this.isGrand)
+
+                if (isActiveTiming && idol.skill.type != "none") {
+                    let skills = this.list
+                        .filter((x, i) => Math.floor(i / 5) == unitno)
+                        .map((x) => x.skill)
+                    let encoreTarget = applyResutLogList.filter((x) => x.time < time)
+                    let result = idol.skill.apply(activateSkillList, encoreTarget, skills)
+                    activateSkillList = activateSkillList.concat(result.activatedSkill)
+                    applyResutLogList.push({
+                        time: time,
+                        position: no,
+                        result: result,
+                    })
+
+                    this.timeline.useSkill(time, idol.atime, no, result.skill)
+                    this.matrix.useSkill(time, idol.atime, no, result.skill)
+                }
+            }
+        }
 
         for (let moment = 0; moment < MUSIC_MAXTIME * 2; moment++) {
             let result = this.timeline.calculate(moment, this.isRezo)
             skills.push(result)
 
-            this.matrix.setTotalSkill(moment, result)
+            //this.matrix.setTotalSkill(moment, result)
         }
 
         this.simulator.setSkill(skills)
@@ -339,182 +207,60 @@ export class Unit {
 }
 
 class Skills {
-    list: Skill[]
+    list: ApplySkill[]
     isRezo: boolean
 
-    constructor(isRezo: boolean, num: number = 0) {
+    constructor(list: ApplySkill[], isRezo: boolean = false) {
         this.isRezo = isRezo
-        this.list = []
+        this.list = list
+    }
+
+    static of(num: number = 0, isRezo: boolean = false) {
+        let list: ApplySkill[] = []
         for (let i = 0; i < num; i++) {
-            this.list.push(skillList.none)
+            list.push(DAMY_APPLY_SKILL)
         }
+        return new Skills(list, isRezo)
     }
 
-    static of(list: Skill[], isRezo: boolean = false) {
-        let s = new Skills(isRezo)
-        s.list = list.map((s) => s.copy())
-        return s
-    }
-
-    copy() {
-        return Skills.of(this.list, this.isRezo)
-    }
-
-    put(no: number, skill: Skill) {
+    put(no: number, skill: ApplySkill) {
         this.list[no] = skill
     }
 
     reset(no: number) {
-        this.list[no] = skillList.none
-    }
-
-    boost(effect: IboostEffect) {
-        return Skills.of(
-            this.list.map((x) => x.boostEffect(effect)),
-            this.isRezo
-        )
-    }
-
-    sum(type: ISkillFrame): eachSkill {
-        let sum: eachSkill = { name: "rezo", num: 0 }
-        let magicflg = false
-        for (let skill of this.list) {
-            const value = +skill[type]
-
-            if (skill.name == "magic" && magicflg) continue
-            sum.num += value
-            if (skill.name == "magic") magicflg = true
-        }
-        return sum
-    }
-
-    max(type: ISkillFrame): eachSkill {
-        let max: eachSkill = { name: "damy", num: 0 }
-
-        for (let skill of this.list) {
-            const value = skill[type]
-
-            if (value > max.num) {
-                max.name = skill.name
-                max.num = value
-            }
-        }
-        return max
-    }
-
-    sumBoost(): IboostEffect {
-        let boost = this.sum("boost")
-        let cover = this.sum("cover")
-        return {
-            boost: boost.num,
-            cover: cover.num,
-        }
-    }
-
-    maxBoost(): IboostEffect {
-        let boost = this.max("boost")
-        let cover = this.max("cover")
-        return {
-            boost: boost.num,
-            cover: cover.num,
-        }
-    }
-
-    sumBuff(): activeSkill {
-        return {
-            support: this.sum("support").num,
-            score: this.sum("score").num,
-            combo: this.sum("combo").num,
-            heal: this.sum("heal").num,
-            guard: this.sum("guard").num,
-            boost: this.sum("boost").num,
-            slide: this.sum("slide").num,
-            cover: 0,
-        }
-    }
-
-    maxBuff(): activeSkill {
-        return {
-            support: this.max("support").num,
-            score: this.max("score").num,
-            combo: this.max("combo").num,
-            heal: this.max("heal").num,
-            guard: this.max("guard").num,
-            boost: this.max("boost").num,
-            slide: this.max("slide").num,
-            cover: 0,
-        }
-    }
-
-    combine(): Skills {
-        let result = this.sumBuff()
-
-        return Skills.of(
-            [
-                new Skill({
-                    name: "rezo",
-                    nameja: "レゾナンス",
-                    support: result.support,
-                    score: result.score,
-                    combo: result.combo,
-                    heal: result.heal,
-                    guard: result.guard,
-                    slide: result.slide,
-                }),
-            ],
-            false
-        )
-    }
-}
-
-class SkillCalclator {
-    static calc(skillsList: Skills[]) {
-        let allSkill = Skills.of(skillsList.flatMap((x) => x.list))
-
-        let rezoBoost = allSkill.sumBoost()
-        let normalBoost = allSkill.maxBoost()
-
-        skillsList = skillsList.map((x) => {
-            if (x.isRezo) {
-                return x.boost(rezoBoost).combine()
-            } else {
-                return x.boost(normalBoost)
-            }
-        })
-
-        let skills = Skills.of(skillsList.flatMap((x) => x.list))
-
-        return skills.maxBuff()
+        this.list[no] = DAMY_APPLY_SKILL
     }
 }
 
 class Timeline {
     idolnum: 5 | 15
     skillMatrix: Skills[]
+
     constructor(idolnum: 5 | 15) {
         this.idolnum = idolnum
         this.skillMatrix = []
         for (let i = 0; i < MUSIC_MAXTIME * 2; i++) {
-            this.skillMatrix.push(new Skills(false, this.idolnum))
+            this.skillMatrix.push(Skills.of(this.idolnum, false))
         }
     }
 
     calculate(time: number, isRezo: boolean[]) {
-        let skills: Skills[] = []
-        for (let i = 0; i < this.idolnum / 5; i++) {
-            skills.push(Skills.of(this.skillMatrix[time].list.slice(i * 5, (i + 1) * 5), isRezo[i]))
+        return SkillHelper.calc(this.skillMatrix[time].list, isRezo)
+    }
+
+    useSkill(time: number, mDuration: number, no: number, skill: ApplySkill) {
+        for (let d = 0; d < mDuration; d++) {
+            let moment = time * 2 + d
+            this.skillMatrix[moment]?.put(no, skill)
         }
-        return SkillCalclator.calc(skills)
     }
 
-    useSkill(time: number, no: number, skill: Skill) {
-        this.skillMatrix[time].put(no, skill)
-    }
-
-    resetSkill(no: number) {
-        this.skillMatrix.forEach(function (skills) {
-            skills.reset(no)
-        })
+    resetSkill() {
+        for (let no = 0; no < this.idolnum; no++) {
+            this.skillMatrix.forEach(function (skills) {
+                skills.reset(no)
+            })
+        }
     }
 }
 
@@ -529,7 +275,7 @@ class Matrix {
     on() {
         $("#skilltable").on("click", "td", function () {
             let skillname = $(this).data("skillname")
-            if (!/\n/.test(skillname)) {
+            if (!skillname) {
                 $("#skilldetail").hide()
                 return false
             }
@@ -591,11 +337,14 @@ class Matrix {
         table.append(tr)
     }
 
-    useSkill(time: number, no: number, skill: Skill) {
+    useSkill(time: number, mDuration: number, no: number, skill: ApplySkill) {
         if (skill.name == "none") return
-        $("#time_" + time + "_" + no)
-            .addClass(skill.name)
-            .data("skillname", skill.nameja)
+
+        for (let d = 0; d < mDuration; d++) {
+            let moment = time * 2 + d
+
+            $(`#time_${moment}_${no}`).addClass(skill.name).data("skillname", skill.nameja)
+        }
     }
 
     setTotalSkill(moment: number, skill: activeSkill) {
@@ -621,8 +370,10 @@ class Matrix {
         }
     }
 
-    resetSkill(no: number) {
-        $(".member_" + no).attr("class", `member_${no}`)
+    resetSkill() {
+        for (let no = 0; no < this.idolnum; no++) {
+            $(".member_" + no).attr("class", `member_${no}`)
+        }
     }
 }
 
@@ -639,11 +390,19 @@ class UI {
     }
 
     make() {
-        for (let type of keyof(skillList)) {
+        for (let type of keyof(cards)) {
             if (!(type in cards)) continue
 
+            let genrename = ""
+            if (type in SkillList) {
+                //@ts-ignore
+                genrename = SkillList[type].nameja
+            } else {
+                genrename = type.toString()
+            }
+
             //タブ
-            let tab = `<div class="tab" data-type="${type}">${skillList[type].nameja}</div>`
+            let tab = `<div class="tab" data-type="${type}">${genrename}</div>`
             $("#il_tab").append(tab)
 
             // カード一覧
@@ -653,7 +412,7 @@ class UI {
             let beforeIdol = null
             for (let idol of cards[type]) {
                 if (!beforeIdol || beforeIdol[4] != idol[4]) {
-                    listgroop += `<div class="il_skillname">${skillList[idol[4]].nameja}</div>`
+                    listgroop += `<div class="il_skillname">${SkillList[idol[4]].nameja}</div>`
                 }
                 let p = idol[0] == "damy" ? "" : `<div><br>${idol[2] + idol[3]}</div>`
                 let img = `<img src="img/alt.png" class="lazy" data-src="img/${idol[0]}.png"/>`
