@@ -160,12 +160,12 @@ class Music {
     notesLife(note: INote) {
         switch (this.liveType) {
             case "grand":
+                if (note.no == 0) {
+                    return this.decreaseLife.tap
+                }
                 return this.decreaseLife[note.type]
 
             case "normal":
-                if (note.no != 0) {
-                    return this.decreaseLife.long
-                }
                 return this.decreaseLife[note.type]
         }
     }
@@ -329,6 +329,7 @@ export class Simulator {
     }
 
     dispLife() {
+        console.log(JSON.stringify(this.lifes))
         let lifeSimu: number[] = []
         let life = 0
         for (let l of this.lifes) {
