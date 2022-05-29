@@ -15,3 +15,12 @@ export const SCORES_GRAND = {
 
 export const SCORE_DEFAULT_GRAND = "./score/sbs.json"
 export const SCORE_DEFAULT_NORMAL = "./score/us.json"
+
+export const DAMY_SCORE: IScore = {
+    name: "",
+    difficulity: "master",
+    level: 26,
+    offset: 0,
+    musictime: 0,
+    notes: [],
+}

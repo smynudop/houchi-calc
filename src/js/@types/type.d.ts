@@ -6,6 +6,29 @@ type ILiveType = "normal" | "grand"
 type INoteType = "tap" | "flick_left" | "flick_right" | "long" | "slide"
 type ISkillFrame = "score" | "combo" | "slide" | "heal" | "support" | "guard" | "boost" | "cover"
 
+interface IScore {
+    name: string
+    difficulity: IDifficult
+    level: number
+    offset: number
+    musictime: number
+    notes: INote[]
+}
+
+interface INote {
+    type: INoteType
+    no: number
+    frame: number
+}
+
+interface INoteInfo {
+    type: INoteType
+    no: number
+    frame: number
+    score: number
+    result: IJudge
+}
+
 interface eachSkill {
     name: string
     num: number
@@ -19,14 +42,6 @@ interface activatedSkill {
     no: number
     time: number
     skill: Skill
-}
-
-interface INote {
-    type: INoteType
-    no: number
-    frame: number
-    score?: number
-    result?: IJudge
 }
 
 interface LongInfo {
