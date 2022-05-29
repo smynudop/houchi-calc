@@ -6,6 +6,37 @@ type ILiveType = "normal" | "grand"
 type INoteType = "tap" | "flick_left" | "flick_right" | "long" | "slide"
 type ISkillFrame = "score" | "combo" | "slide" | "heal" | "support" | "guard" | "boost" | "cover"
 
+const skillNameList = [
+    "support",
+    "tuning",
+
+    "heal",
+    "synergy",
+    "allround",
+
+    "ssrguard",
+    "guard",
+
+    "symfony",
+    "boost",
+    "srboost",
+
+    "motif",
+
+    "concent",
+    "slideact",
+
+    "combona",
+    "coode",
+
+    "encore",
+    "refrain",
+    "magic",
+
+    "none",
+] as const
+type ISkillName = typeof skillNameList[number]
+
 interface eachSkill {
     name: string
     num: number
@@ -41,7 +72,7 @@ interface IMemory {
     member: string[]
 }
 
-type IidolProfile = readonly [string, IAttr, number, string, IskillName]
+type IidolProfile = readonly [string, IAttr, number, string, ISkillName]
 
 type IboostEffect = {
     boost: number
