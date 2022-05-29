@@ -1,7 +1,6 @@
-dist/css/
-dist/img/
-dist/js/
-dist/score/
+dist/*.html
+dist/**/*
+!dist/material/*
 
 node_modules/
 old/
