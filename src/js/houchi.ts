@@ -3,14 +3,13 @@ import { keyof } from "./data/data"
 import { MUSIC_MAXTIME } from "./data/constants"
 import { Idol, idols, damyidol } from "./idol"
 import { cards } from "./data/idol"
-import { DAMY_APPLY_SKILL, SkillList } from "./skill2"
+import { SkillList } from "./skill"
 import { SkillHelper } from "./skillHelper"
 
 export class Unit {
     isGrand: boolean
     idolnum: 5 | 15
     list: Idol[]
-    timeline: Timeline
     matrix: Matrix
     ui: UI
     memory: Memory
@@ -24,7 +23,6 @@ export class Unit {
         this.list = []
         this.isGuestRezo = false
         this.appeal = isGrand ? 420000 : 280000
-        this.timeline = new Timeline(this.idolnum)
         this.matrix = new Matrix(this.idolnum)
         this.ui = new UI(this.idolnum, this)
         this.memory = new Memory(this, isGrand)
@@ -157,15 +155,13 @@ export class Unit {
     }
 
     calc() {
-        let skills: IFinnalySkill[] = []
-
         let musictime = this.simulator.music.musictime
 
         this.matrix.resetSkill()
-        this.timeline.resetSkill()
 
-        let activateSkillList: ActivateSkill[] = []
-        let applyResutLogList: ApplyResultLog[] = []
+        let activateSkillList: Buff[] = []
+        let applyResutLogList = new AbilityList()
+        let logs: string[] = []
 
         for (let time = 0; time < MUSIC_MAXTIME; time++) {
             for (let no = 0; no < this.idolnum; no++) {
@@ -178,23 +174,28 @@ export class Unit {
                     let skills = this.list
                         .filter((x, i) => Math.floor(i / 5) == unitno)
                         .map((x) => x.skill)
-                    let encoreTarget = applyResutLogList.filter((x) => x.time < time)
-                    let result = idol.skill.apply(activateSkillList, encoreTarget, skills)
-                    activateSkillList = activateSkillList.concat(result.activatedSkill)
-                    applyResutLogList.push({
-                        time: time,
-                        position: no,
-                        result: result,
-                    })
 
-                    this.timeline.useSkill(time, idol.atime, no, result.skill)
-                    this.matrix.useSkill(time, idol.atime, no, result.skill)
+                    let encoreAbility = applyResutLogList.getEncoreTarget(time)
+
+                    let ability = idol.skill.execute(activateSkillList, encoreAbility, skills)
+                    if (ability.isEncoreTarget) {
+                        applyResutLogList.push(time, no, ability)
+                    }
+
+                    logs.push(`${time}s: ${ability.message}`)
+
+                    let response = ability.exec(0)
+                    activateSkillList = activateSkillList.concat(response.activateBuffs)
+
+                    this.matrix.useSkill(time, idol.atime, no, ability)
                 }
             }
         }
 
+        let skills: FinallyAbility[] = []
+
         for (let moment = 0; moment < MUSIC_MAXTIME * 2; moment++) {
-            let result = this.timeline.calculate(moment, this.isRezo)
+            let result = this.matrix.calculate(moment, this.isRezo)
             skills.push(result)
 
             //this.matrix.setTotalSkill(moment, result)
@@ -202,74 +203,87 @@ export class Unit {
 
         this.simulator.setSkill(skills)
 
+        console.log(logs.join("\n"))
+
         this.save()
     }
 }
 
+class AbilityList {
+    list: AbilityLog[]
+    constructor() {
+        this.list = []
+    }
+
+    clear() {
+        this.list = []
+    }
+
+    push(time: number, position: number, ability: Ability) {
+        this.list.push({
+            time: time,
+            position: position,
+            ability: ability,
+        })
+    }
+
+    getEncoreTarget(time: number) {
+        //アンコールターゲットを確認
+        let order = [9, 7, 6, 8, 10, 4, 2, 1, 3, 5, 14, 12, 11, 13, 15]
+
+        const list = this.list
+            .filter((x) => x.ability != null)
+            .filter((x) => x.time < time)
+            .sort((a, b) => a.time - b.time || order[b.position] - order[a.position] || 0)
+            .reverse()
+
+        if (list.length == 0) {
+            return null
+        } else {
+            return list[0].ability
+        }
+    }
+}
+
 class Skills {
-    list: ApplySkill[]
+    list: (Ability | null)[]
     isRezo: boolean
 
-    constructor(list: ApplySkill[], isRezo: boolean = false) {
+    constructor(list: (Ability | null)[], isRezo: boolean = false) {
         this.isRezo = isRezo
         this.list = list
     }
 
     static of(num: number = 0, isRezo: boolean = false) {
-        let list: ApplySkill[] = []
+        let list: (Ability | null)[] = []
         for (let i = 0; i < num; i++) {
-            list.push(DAMY_APPLY_SKILL)
+            list.push(null)
         }
         return new Skills(list, isRezo)
     }
 
-    put(no: number, skill: ApplySkill) {
+    put(no: number, skill: Ability | null) {
         this.list[no] = skill
     }
 
     reset(no: number) {
-        this.list[no] = DAMY_APPLY_SKILL
+        this.list[no] = null
     }
 }
 
-class Timeline {
+class Matrix {
     idolnum: 5 | 15
     skillMatrix: Skills[]
 
     constructor(idolnum: 5 | 15) {
         this.idolnum = idolnum
+        this.make()
+        this.on()
+
         this.skillMatrix = []
         for (let i = 0; i < MUSIC_MAXTIME * 2; i++) {
             this.skillMatrix.push(Skills.of(this.idolnum, false))
         }
-    }
-
-    calculate(time: number, isRezo: boolean[]) {
-        return SkillHelper.calc(this.skillMatrix[time].list, isRezo)
-    }
-
-    useSkill(time: number, mDuration: number, no: number, skill: ApplySkill) {
-        for (let d = 0; d < mDuration; d++) {
-            let moment = time * 2 + d
-            this.skillMatrix[moment]?.put(no, skill)
-        }
-    }
-
-    resetSkill() {
-        for (let no = 0; no < this.idolnum; no++) {
-            this.skillMatrix.forEach(function (skills) {
-                skills.reset(no)
-            })
-        }
-    }
-}
-
-class Matrix {
-    idolnum: number
-    constructor(idolnum: number) {
-        this.idolnum = idolnum
-        this.make()
-        this.on()
     }
 
     on() {
@@ -337,17 +351,25 @@ class Matrix {
         table.append(tr)
     }
 
-    useSkill(time: number, mDuration: number, no: number, skill: ApplySkill) {
+    calculate(time: number, isRezo: boolean[]) {
+        return SkillHelper.calc(this.skillMatrix[time].list, isRezo)
+    }
+
+    useSkill(time: number, mDuration: number, no: number, skill: Ability | null) {
+        if (skill == null) {
+            return
+        }
+
         if (skill.name == "none") return
 
         for (let d = 0; d < mDuration; d++) {
             let moment = time * 2 + d
-
+            this.skillMatrix[moment]?.put(no, skill)
             $(`#time_${moment}_${no}`).addClass(skill.name).data("skillname", skill.nameja)
         }
     }
 
-    setTotalSkill(moment: number, skill: activeSkill) {
+    setTotalSkill(moment: number, skill: RequiredBuff) {
         $("#notes_" + moment).data(
             "skillname",
             `スコア${skill.score}/コンボ${skill.combo}
@@ -372,6 +394,9 @@ class Matrix {
 
     resetSkill() {
         for (let no = 0; no < this.idolnum; no++) {
+            this.skillMatrix.forEach(function (skills) {
+                skills.reset(no)
+            })
             $(".member_" + no).attr("class", `member_${no}`)
         }
     }

@@ -189,7 +189,7 @@ export class Simulator {
     life: number
     lifes: number[]
     unitlife: number
-    skills: IFinnalySkill[]
+    skills: FinallyAbility[]
     isGrand: boolean
     music: Music
     dangerMoment: number
@@ -277,7 +277,7 @@ export class Simulator {
         this.music.setMusictime(time)
     }
 
-    setSkill(skills: IFinnalySkill[]) {
+    setSkill(skills: FinallyAbility[]) {
         this.skills = skills
         this.calc()
     }
@@ -319,7 +319,6 @@ export class Simulator {
         this.reset()
         for (let moment = 0; moment < this.skills.length; moment++) {
             let skill = this.skills[moment](this.life)
-            console.log(moment, skill)
             if (skill.support >= 4) {
                 this.perfect(moment, skill)
             } else if (skill.guard > 0) {
@@ -379,7 +378,7 @@ export class Simulator {
         }
     }
 
-    perfect(moment: number, bonus: activeSkill) {
+    perfect(moment: number, bonus: RequiredBuff) {
         let score = (100 + bonus.score) / 100
         let combo = (100 + bonus.combo) / 100
         let slide = (100 + bonus.slide) / 100

@@ -37,10 +37,6 @@ const skillNameList = [
 ] as const
 type ISkillName = typeof skillNameList[number]
 
-type activeSkill = {
-    [k in ISkillFrame]: number
-}
-
 interface INote {
     type: INoteType
     no: number
@@ -72,38 +68,46 @@ type IDecreaseLife = {
     [k in INoteType]: number
 }
 
-type SkillEffect = Partial<activeSkill>
-type ActivateSkill = (life: number) => SkillEffect
-type ApplySkill = {
-    exec: (life: number) => SkillEffect
+type Buff = {
+    [k in ISkillFrame]?: number
+}
+type RequiredBuff = Required<Buff>
+
+type SkillEffect = {
     name: ISkillName
     nameja: string
-}
+} & Buff
 
-interface ApplyResultLog {
-    time: number
-    position: number
-    result: ApplyResponse
-}
-
-type ApplyResponse = {
-    skill: ApplySkill
-    activatedSkill: ActivateSkill[]
-    isEncore: boolean
-}
-
-type ISkill2 = {
+type ISkill = {
     type: ISkillName
     nameja: string
-    activeSkill: SkillEffect
+    activeSkill: Buff
     isMagic: boolean
+    isEncore: boolean
     atype: IATime
-    activate(): (life: number) => SkillEffect
-    apply(
-        activateSkillList: ActivateSkill[],
-        ApplyResutLogs: ApplyResultLog[],
-        skills: ISkill2[]
-    ): ApplyResponse
+    execute(applyBuffList: Buff[], encoreAbility: MaybeAbility, magicSkillList: ISkill[]): Ability
 }
 
-type IFinnalySkill = (life: number) => activeSkill
+type Ability = {
+    name: ISkillName
+    nameja: string
+    isMagic: boolean
+    isEncoreTarget: boolean
+    message: string
+    exec: (life: number) => AbilityResponse
+}
+type MaybeAbility = Ability | null
+
+type AbilityResponse = {
+    isMagic: boolean
+    applyBuff: SkillEffect | null
+    activateBuffs: SkillEffect[]
+}
+
+type AbilityLog = {
+    time: number
+    position: number
+    ability: EncoreAbility
+}
+
+type FinallyAbility = (life: number) => RequiredBuff

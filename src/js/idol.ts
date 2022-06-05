@@ -1,6 +1,6 @@
 import { keyof, atimes } from "./data/data"
 import { cards } from "./data/idol"
-import { SkillList } from "./skill2"
+import { SkillList } from "./skill"
 
 export class Idol {
     name: string
@@ -10,7 +10,7 @@ export class Idol {
     secper: string
     type: ISkillName
     atime: number
-    skill: ISkill2
+    skill: ISkill
 
     constructor(data: IidolProfile) {
         let type = data[4]

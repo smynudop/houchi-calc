@@ -1,7 +1,8 @@
 export class SkillHelper {
-    static max(skills: SkillEffect[], frame: keyof SkillEffect): number {
+    static max(skills: (Buff | null)[], frame: keyof Buff): number {
         let result = 0
         for (let skill of skills) {
+            if (!skill) continue
             const value = skill[frame]
             if (value == undefined) {
                 continue
@@ -11,9 +12,10 @@ export class SkillHelper {
         return result
     }
 
-    static sum(skills: SkillEffect[], frame: keyof SkillEffect): number {
+    static sum(skills: (Buff | null)[], frame: keyof Buff): number {
         let result = 0
         for (let skill of skills) {
+            if (!skill) continue
             const value = skill[frame]
             if (value == undefined) {
                 continue
@@ -23,7 +25,7 @@ export class SkillHelper {
         return result
     }
 
-    static boost(skill: SkillEffect, boostEffect: IboostEffect): activeSkill {
+    static boost(skill: Buff, boostEffect: IboostEffect): RequiredBuff {
         const boost = 1 + boostEffect.boost
         let r = {
             score: Math.ceil((skill.score ?? 0) * boost),
@@ -40,7 +42,7 @@ export class SkillHelper {
         return r
     }
 
-    static calcmax(skills: SkillEffect[]): activeSkill {
+    static calcmax(skills: (Buff | null)[]): RequiredBuff {
         return {
             support: SkillHelper.max(skills, "support"),
             score: SkillHelper.max(skills, "score"),
@@ -53,7 +55,7 @@ export class SkillHelper {
         }
     }
 
-    static combine(skills: SkillEffect[]): activeSkill {
+    static combine(skills: (Buff | null)[]): RequiredBuff {
         return {
             support: SkillHelper.sum(skills, "support"),
             score: SkillHelper.sum(skills, "score"),
@@ -66,50 +68,38 @@ export class SkillHelper {
         }
     }
 
-    static calcBoostEffect(skills: SkillEffect[], isRezo: boolean): IboostEffect {
+    static calcBoostEffect(skills: (Buff | null)[], isRezo: boolean): IboostEffect {
         if (isRezo) {
             return {
-                boost: skills
-                    .map((x) => x.boost)
-                    .filter((x): x is number => x !== undefined)
-                    .reduce((a, c) => a + c, 0),
-                cover: skills
-                    .map((x) => x.cover)
-                    .filter((x): x is number => x !== undefined)
-                    .reduce((a, c) => a + c, 0),
+                boost: SkillHelper.sum(skills, "boost"),
+                cover: SkillHelper.sum(skills, "cover"),
             }
         } else {
             return {
-                boost: skills
-                    .map((x) => x.boost)
-                    .filter((x): x is number => x !== undefined)
-                    .reduce((a, c) => Math.max(a, c), 0),
-                cover: skills
-                    .map((x) => x.cover)
-                    .filter((x): x is number => x !== undefined)
-                    .reduce((a, c) => Math.max(a, c), 0),
+                boost: SkillHelper.max(skills, "boost"),
+                cover: SkillHelper.max(skills, "cover"),
             }
         }
     }
 
-    static calc(applySkills: ApplySkill[], isRezo: boolean[]) {
+    static calc(abilities: (Ability | null)[], isRezo: boolean[]) {
         return (life: number) => {
-            let allSkill = applySkills.map((s) => s.exec(life))
+            const allBuffs = abilities.map((s) => (s != null ? s.exec(life).applyBuff : null))
 
-            let rezoBoost = SkillHelper.calcBoostEffect(allSkill, true)
-            let normalBoost = SkillHelper.calcBoostEffect(allSkill, false)
+            let rezoBoost = SkillHelper.calcBoostEffect(allBuffs, true)
+            let normalBoost = SkillHelper.calcBoostEffect(allBuffs, false)
 
-            let skillGroups: SkillEffect[][] = []
-            for (let i = 0; i < Math.ceil(allSkill.length / 5); i++) {
-                skillGroups.push(allSkill.slice(i * 5, i * 5 + 5))
+            let skillGroups: (Buff | null)[][] = []
+            for (let i = 0; i < Math.ceil(abilities.length / 5); i++) {
+                skillGroups.push(allBuffs.slice(i * 5, i * 5 + 5))
             }
 
             skillGroups = skillGroups.map((x, i) => {
                 if (isRezo[i]) {
-                    let tmp = x.map((y) => SkillHelper.boost(y, rezoBoost))
+                    let tmp = x.map((y) => (y != null ? SkillHelper.boost(y, rezoBoost) : null))
                     return [SkillHelper.combine(tmp)]
                 } else {
-                    return x.map((y) => SkillHelper.boost(y, normalBoost))
+                    return x.map((y) => (y != null ? SkillHelper.boost(y, normalBoost) : null))
                 }
             })
 
