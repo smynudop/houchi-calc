@@ -360,12 +360,12 @@ class Matrix {
             return
         }
 
-        if (skill.name == "none") return
+        if (skill.type == "none") return
 
         for (let d = 0; d < mDuration; d++) {
             let moment = time * 2 + d
             this.skillMatrix[moment]?.put(no, skill)
-            $(`#time_${moment}_${no}`).addClass(skill.name).data("skillname", skill.nameja)
+            $(`#time_${moment}_${no}`).addClass(skill.type).data("skillname", skill.nameja)
         }
     }
 

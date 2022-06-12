@@ -2,32 +2,38 @@ export class SkillHelper {
     static max(skills: (Buff | null)[], frame: keyof Buff): number {
         let result = 0
         for (let skill of skills) {
-            if (!skill) continue
-            const value = skill[frame]
-            if (value == undefined) {
-                continue
-            }
+            if (skill == null) continue
+            const value = skill[frame] ?? 0
             result = Math.max(result, value)
         }
         return result
     }
 
-    static sum(skills: (Buff | null)[], frame: keyof Buff): number {
+    static sum(skills: (SkillEffect | null)[], frame: keyof Buff): number {
+        let skills2 = skills.filter((s): s is SkillEffect => s != null)
+
         let result = 0
-        for (let skill of skills) {
-            if (!skill) continue
-            const value = skill[frame]
-            if (value == undefined) {
-                continue
-            }
-            result += value
+        let magicSkill = {
+            name: "magic",
+            nameja: "マジック統合",
+            [frame]: SkillHelper.max(
+                skills2.filter((s) => s.name == "magic"),
+                frame
+            ),
+        } as SkillEffect
+        skills2 = skills2.filter((s) => s.name != "magic").concat(magicSkill)
+
+        for (let skill of skills2) {
+            result += skill[frame] ?? 0
         }
         return result
     }
 
-    static boost(skill: Buff, boostEffect: IboostEffect): RequiredBuff {
+    static boost(skill: SkillEffect, boostEffect: IboostEffect): SkillEffect {
         const boost = 1 + boostEffect.boost
         let r = {
+            name: skill.name,
+            nameja: skill.nameja,
             score: Math.ceil((skill.score ?? 0) * boost),
             combo: Math.ceil((skill.combo ?? 0) * boost),
             slide: Math.ceil((skill.slide ?? 0) * boost),
@@ -42,7 +48,7 @@ export class SkillHelper {
         return r
     }
 
-    static calcmax(skills: (Buff | null)[]): RequiredBuff {
+    static calcmax(skills: MaybeSkillEffect[]): RequiredBuff {
         return {
             support: SkillHelper.max(skills, "support"),
             score: SkillHelper.max(skills, "score"),
@@ -55,8 +61,10 @@ export class SkillHelper {
         }
     }
 
-    static combine(skills: (Buff | null)[]): RequiredBuff {
+    static combine(skills: MaybeSkillEffect[]): MaybeSkillEffect {
         return {
+            name: "none",
+            nameja: "レゾナンス統合",
             support: SkillHelper.sum(skills, "support"),
             score: SkillHelper.sum(skills, "score"),
             combo: SkillHelper.sum(skills, "combo"),
@@ -68,7 +76,7 @@ export class SkillHelper {
         }
     }
 
-    static calcBoostEffect(skills: (Buff | null)[], isRezo: boolean): IboostEffect {
+    static calcBoostEffect(skills: MaybeSkillEffect[], isRezo: boolean): IboostEffect {
         if (isRezo) {
             return {
                 boost: SkillHelper.sum(skills, "boost"),
@@ -89,7 +97,7 @@ export class SkillHelper {
             let rezoBoost = SkillHelper.calcBoostEffect(allBuffs, true)
             let normalBoost = SkillHelper.calcBoostEffect(allBuffs, false)
 
-            let skillGroups: (Buff | null)[][] = []
+            let skillGroups: MaybeSkillEffect[][] = []
             for (let i = 0; i < Math.ceil(abilities.length / 5); i++) {
                 skillGroups.push(allBuffs.slice(i * 5, i * 5 + 5))
             }

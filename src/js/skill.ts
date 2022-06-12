@@ -25,14 +25,14 @@ class Skill2 implements ISkill {
         }
 
         const result: AbilityResponse = {
-            isMagic: false,
             activateBuffs: [skillEffect],
             applyBuff: skillEffect,
         }
 
         return {
-            name: this.type,
+            type: this.type,
             nameja: this.nameja,
+            executeType: this.type,
             isMagic: false,
             isEncoreTarget: true,
             message: `${this.nameja}が発動しました`,
@@ -67,14 +67,14 @@ class Refrain implements ISkill {
         }
 
         const result: AbilityResponse = {
-            isMagic: false,
             activateBuffs: [],
             applyBuff: skillEffect,
         }
 
         return {
-            name: this.type,
+            type: this.type,
             nameja: this.nameja,
+            executeType: this.type,
             isMagic: false,
             isEncoreTarget: true,
             message: `リフレインが発動しました。スコア${skillEffect.score}%, コンボ${skillEffect.combo}%`,
@@ -142,8 +142,9 @@ class Encore implements ISkill {
     execute(applyBuffList: Buff[], encoreAbility: MaybeAbility, magicSkillList: ISkill[]): Ability {
         if (encoreAbility == null) {
             return {
-                name: this.type,
+                type: this.type,
                 nameja: this.nameja,
+                executeType: "none",
                 isMagic: false,
                 isEncoreTarget: false,
                 message: "模倣対象がなかったため、アンコールは発動しません。",
@@ -167,8 +168,9 @@ class Encore implements ISkill {
         }
 
         return {
-            name: this.type,
+            type: this.type,
             nameja: `アンコール(${encoreAbility.nameja})`,
+            executeType: encoreAbility.executeType,
             isMagic: false,
             isEncoreTarget: false,
             message: `アンコールは${encoreAbility.nameja}を模倣しました。${encoreAbility.message}`,
@@ -216,8 +218,9 @@ class Magic implements ISkill {
                 }
             }
             return {
-                name: "none",
+                type: "none",
                 nameja: "",
+                executeType: this.type,
                 isMagic: false,
                 isEncoreTarget: false,
                 message: "発動対象がなかったため、マジックは発動しません。",
@@ -230,7 +233,7 @@ class Magic implements ISkill {
         )
 
         const exec = (life: number) => {
-            const responses = abilities.map((s) => s.exec(life)).filter((s) => !s.isMagic)
+            const responses = abilities.map((s) => s.exec(life))
 
             const activateBuffs = responses.flatMap((s) => s.activateBuffs)
             const applyBuff = {
@@ -251,8 +254,9 @@ class Magic implements ISkill {
         const messages = abilities.map((s) => "[マジック]" + s.message).join("\n")
 
         return {
-            name: this.type,
+            type: this.type,
             nameja: this.nameja,
+            executeType: this.type,
             isMagic: true,
             isEncoreTarget: true,
             message: `マジックは${skillNames}を発動しました。\n${messages}`,

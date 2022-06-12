@@ -77,6 +77,7 @@ type SkillEffect = {
     name: ISkillName
     nameja: string
 } & Buff
+type MaybeSkillEffect = SkillEffect | null
 
 type ISkill = {
     type: ISkillName
@@ -89,8 +90,9 @@ type ISkill = {
 }
 
 type Ability = {
-    name: ISkillName
+    type: ISkillName
     nameja: string
+    executeType: ISkillName
     isMagic: boolean
     isEncoreTarget: boolean
     message: string
@@ -99,7 +101,6 @@ type Ability = {
 type MaybeAbility = Ability | null
 
 type AbilityResponse = {
-    isMagic: boolean
     applyBuff: SkillEffect | null
     activateBuffs: SkillEffect[]
 }

@@ -52,7 +52,7 @@ class Score {
             if (li.begin <= frame && frame <= li.end) {
                 li.isContinue = false
                 let notes = this.notes
-                    .filter((n) => n.no == k && n.frame > frame)
+                    .filter((n) => n.no == k && n.frame >= frame)
                     .sort((a, b) => a.frame - b.frame)
                 result.push(notes[0])
             }
@@ -319,6 +319,8 @@ export class Simulator {
         this.reset()
         for (let moment = 0; moment < this.skills.length; moment++) {
             let skill = this.skills[moment](this.life)
+            this.setTotalSkill(moment, skill)
+
             if (skill.support >= 4) {
                 this.perfect(moment, skill)
             } else if (skill.guard > 0) {
@@ -335,6 +337,15 @@ export class Simulator {
         必要ライフ: ${this.unitlife}<br>
         miss区間：${this.dangerMoment / 2}秒`
         $("#simulator").html(result)
+    }
+
+    setTotalSkill(moment: number, skill: RequiredBuff) {
+        $("#notes_" + moment).data(
+            "skillname",
+            `スコア${skill.score}/コンボ${skill.combo}
+サポ${skill.support}
+回復${skill.heal}/ダメガ${skill.guard}`
+        )
     }
 
     dispLife() {
