@@ -335,7 +335,8 @@ export class Simulator {
         let result = `シミュレータ(β): ${this.music.name}<br>
         スコア: ${this.totalScore}<br>
         必要ライフ: ${this.unitlife}<br>
-        miss区間：${this.dangerMoment / 2}秒`
+        miss区間：${this.dangerMoment / 2}秒<br>
+        MAXコンボ：${Math.max(...this.combos, 0)}`
         $("#simulator").html(result)
     }
 

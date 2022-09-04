@@ -3,7 +3,7 @@ type IAttr = "cu" | "co" | "pa"
 type IATime = "l" | "ml" | "m" | "ms" | "s" | "sp"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"
 type ILiveType = "normal" | "grand"
-type INoteType = "tap" | "flick_left" | "flick_right" | "long" | "slide"
+type INoteType = "tap" | "flick_left" | "flick_right" | "flick" | "long" | "slide"
 type ISkillFrame = "score" | "combo" | "slide" | "heal" | "support" | "guard" | "boost" | "cover"
 
 const skillNameList = [
