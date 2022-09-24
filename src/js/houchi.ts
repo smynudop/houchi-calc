@@ -16,8 +16,10 @@ export class Unit {
     isGuestRezo: boolean
     appeal: number
     simulator: Simulator
-    constructor(isGrand: boolean) {
+    isHouchi: boolean
+    constructor(isGrand: boolean, isHouchi = true) {
         this.isGrand = isGrand
+        this.isHouchi = isHouchi
 
         this.idolnum = isGrand ? 15 : 5
         this.list = []
@@ -26,7 +28,7 @@ export class Unit {
         this.matrix = new Matrix(this.idolnum)
         this.ui = new UI(this.idolnum, this)
         this.memory = new Memory(this, isGrand)
-        this.simulator = new Simulator(this, this.appeal, isGrand)
+        this.simulator = new Simulator(this, this.appeal, isGrand, isHouchi)
 
         this.load()
         //this.disp()

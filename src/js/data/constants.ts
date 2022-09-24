@@ -12,7 +12,7 @@ export const CONF: Record<number, number> = {
     32: 2.4,
 } as const
 
-export const DECREASE_LIFE: Record<ILiveType, IDecreaseLife> = {
+export const DECREASE_LIFE: Record<ILiveType, DecreaseLife> = {
     normal: {
         tap: 20,
         long: 10,

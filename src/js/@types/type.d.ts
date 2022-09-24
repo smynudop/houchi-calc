@@ -1,6 +1,6 @@
-type IJudge = "perfect" | "gone" | "guard" | "miss"
+type Judge = "perfect" | "gone" | "guard" | "miss"
 type IAttr = "cu" | "co" | "pa"
-type IATime = "l" | "ml" | "m" | "ms" | "s" | "sp"
+type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"
 type ILiveType = "normal" | "grand"
 type INoteType = "tap" | "flick_left" | "flick_right" | "flick" | "long" | "slide"
@@ -18,6 +18,7 @@ const skillNameList = [
     "guard",
 
     "symfony",
+    "ensemble",
     "boost",
     "srboost",
 
@@ -31,6 +32,10 @@ const skillNameList = [
 
     "encore",
     "refrain",
+
+    "alternate",
+    "mutual",
+
     "magic",
 
     "none",
@@ -42,7 +47,7 @@ interface INote {
     no: number
     frame: number
     score?: number
-    result?: IJudge
+    result?: Judge
 }
 
 interface LongInfo {
@@ -57,14 +62,14 @@ interface IMemory {
     member: string[]
 }
 
-type IidolProfile = readonly [string, IAttr, number, string, ISkillName]
+type IdolProfile = readonly [string, IAttr, number, string, ISkillName]
 
-type IboostEffect = {
+type BoostEffect = {
     boost: number
     cover: number
 }
 
-type IDecreaseLife = {
+type DecreaseLife = {
     [k in INoteType]: number
 }
 
@@ -85,7 +90,7 @@ type ISkill = {
     activeSkill: Buff
     isMagic: boolean
     isEncore: boolean
-    atype: IATime
+    atype: ATime
     execute(applyBuffList: Buff[], encoreAbility: MaybeAbility, magicSkillList: ISkill[]): Ability
 }
 
@@ -108,7 +113,7 @@ type AbilityResponse = {
 type AbilityLog = {
     time: number
     position: number
-    ability: EncoreAbility
+    ability: Ability
 }
 
 type FinallyAbility = (life: number) => RequiredBuff

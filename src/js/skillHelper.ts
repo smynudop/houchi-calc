@@ -29,22 +29,41 @@ export class SkillHelper {
         return result
     }
 
-    static boost(skill: SkillEffect, boostEffect: IboostEffect): SkillEffect {
+    static boost(skill: MaybeSkillEffect, boostEffect: BoostEffect): MaybeSkillEffect {
+        if (skill == null) return null
+
+        if(skill.guard ?? 0 > 0){
+            console.log(skill)
+        }
+
         const boost = 1 + boostEffect.boost
         let r = {
             name: skill.name,
             nameja: skill.nameja,
-            score: Math.ceil((skill.score ?? 0) * boost),
-            combo: Math.ceil((skill.combo ?? 0) * boost),
-            slide: Math.ceil((skill.slide ?? 0) * boost),
+            score: skill.score == null ? 0
+                   : skill.score < 0 ? skill.score
+                   : Math.ceil(skill.score * boost),
+            combo: skill.combo == null ? 0
+                : skill.combo < 0 ? skill.combo
+                : Math.ceil(skill.combo * boost),
+            slide: skill.slide == null ? 0
+                : skill.slide < 0 ? skill.slide
+                : Math.ceil(skill.slide * boost),
             heal:
-                Math.ceil((skill.heal ?? 0) * boost) +
-                ((skill.guard ?? 0) >= 1 ? boostEffect.cover : 0),
+                Math.max(
+                    Math.ceil((skill.heal ?? 0) * boost),
+                    (skill.guard ?? 0) >= 1 ? boostEffect.cover : 0
+                ),
             support: skill.support ? skill.support + boostEffect.cover : 0,
             guard: skill.guard ?? 0,
             boost: skill.boost ?? 0,
             cover: skill.cover ?? 0,
         }
+
+        if(skill.guard ?? 0 > 0){
+            console.log(r)
+        }
+
         return r
     }
 
@@ -76,7 +95,7 @@ export class SkillHelper {
         }
     }
 
-    static calcBoostEffect(skills: MaybeSkillEffect[], isRezo: boolean): IboostEffect {
+    static calcBoostEffect(skills: MaybeSkillEffect[], isRezo: boolean): BoostEffect {
         if (isRezo) {
             return {
                 boost: SkillHelper.sum(skills, "boost"),
@@ -94,6 +113,13 @@ export class SkillHelper {
         return (life: number) => {
             const allBuffs = abilities.map((s) => (s != null ? s.exec(life).applyBuff : null))
 
+            for(const buff of allBuffs){
+                if (!buff) continue
+                if (buff.slide == null || buff.slide < (buff.score ?? 0)){
+                    buff.slide = buff.score
+                }
+            }
+
             let rezoBoost = SkillHelper.calcBoostEffect(allBuffs, true)
             let normalBoost = SkillHelper.calcBoostEffect(allBuffs, false)
 
@@ -104,10 +130,10 @@ export class SkillHelper {
 
             skillGroups = skillGroups.map((x, i) => {
                 if (isRezo[i]) {
-                    let tmp = x.map((y) => (y != null ? SkillHelper.boost(y, rezoBoost) : null))
+                    let tmp = x.map((y) => SkillHelper.boost(y, rezoBoost))
                     return [SkillHelper.combine(tmp)]
                 } else {
-                    return x.map((y) => (y != null ? SkillHelper.boost(y, normalBoost) : null))
+                    return x.map((y) => SkillHelper.boost(y, normalBoost))
                 }
             })
 

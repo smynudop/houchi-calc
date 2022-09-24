@@ -113,7 +113,7 @@ class Music {
     coefficient: number
     difficulity: IDifficult
     liveType: ILiveType
-    decreaseLife: IDecreaseLife
+    decreaseLife: DecreaseLife
     musictime: number
 
     constructor() {
@@ -193,8 +193,9 @@ export class Simulator {
     isGrand: boolean
     music: Music
     dangerMoment: number
+    isHouchi: boolean
 
-    constructor(unit: Unit, appeal: number, isGrand: boolean) {
+    constructor(unit: Unit, appeal: number, isGrand: boolean, isHouchi = true) {
         this.unit = unit
         this.notes = new Score([], 0)
         this.appeal = appeal
@@ -207,6 +208,7 @@ export class Simulator {
         this.isGrand = isGrand
         this.music = new Music()
         this.dangerMoment = 0
+        this.isHouchi = isHouchi
 
         this.init()
         this.load()
@@ -321,7 +323,9 @@ export class Simulator {
             let skill = this.skills[moment](this.life)
             this.setTotalSkill(moment, skill)
 
-            if (skill.support >= 4) {
+            let isPerfect = !this.isHouchi || skill.support >= 4
+
+            if (isPerfect) {
                 this.perfect(moment, skill)
             } else if (skill.guard > 0) {
                 this.guard(moment)
@@ -341,12 +345,18 @@ export class Simulator {
     }
 
     setTotalSkill(moment: number, skill: RequiredBuff) {
-        $("#notes_" + moment).data(
-            "skillname",
-            `スコア${skill.score}/コンボ${skill.combo}
+        
+        let txt = ""
+        if (this.isHouchi){
+            txt = `スコア${skill.score}/コンボ${skill.combo}
 サポ${skill.support}
 回復${skill.heal}/ダメガ${skill.guard}`
-        )
+        } else {
+            txt = `スコア${skill.score}/コンボ${skill.combo}
+スライド${skill.slide}
+回復${skill.heal}`
+        }
+        $("#notes_" + moment).data("skillname", txt)
     }
 
     dispLife() {

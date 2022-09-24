@@ -1,4 +1,4 @@
-export const cards: { [k: string]: readonly IidolProfile[] } = {
+export const cards: { [k: string]: readonly IdolProfile[] } = {
     symfony: [
         ["シンフォ7高cu", "cu", 7, "高", "symfony"],
         ["シンフォ7高co", "co", 7, "高", "symfony"],
@@ -227,4 +227,18 @@ export const cards: { [k: string]: readonly IidolProfile[] } = {
         ["コーデ11高co", "co", 11, "高", "coode"],
         ["コーデ11高pa", "pa", 11, "高", "coode"],
     ],
+
+    beta: [
+        ["オルタ6中cu", "cu", 9, "中", "alternate"],
+        ["オルタ6中cu", "co", 9, "中", "alternate"],
+        ["オルタ6中cu", "pa", 9, "中", "alternate"],
+        ["ミュー6中cu", "cu", 9, "中", "mutual"],
+        ["ミュー6中cu", "co", 9, "中", "mutual"],
+        ["ミュー6中cu", "pa", 9, "中", "mutual"],
+        ["アンサンブル4高cu", "cu", 4, "高", "ensemble"],
+        ["アンサンブル6中cu", "cu", 6, "中", "ensemble"],
+        ["アンサンブル13高cu", "cu", 13, "高", "ensemble"],
+       
+
+    ]
 } as const

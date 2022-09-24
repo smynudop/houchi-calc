@@ -12,7 +12,7 @@ export class Idol {
     atime: number
     skill: ISkill
 
-    constructor(data: IidolProfile) {
+    constructor(data: IdolProfile) {
         let type = data[4]
         let skill = SkillList[type]
 
