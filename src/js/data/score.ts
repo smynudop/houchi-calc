@@ -6,6 +6,7 @@ export const SCORES_NORMAL = {
     "美に入り彩を穿つ[pro]": "./score/bisai.json",
     "ミラーボール・ラブ[mas]": "./score/mirror.json",
     "ビートシューター[mas]": "./score/beat_new.json",
+    "サラバ[mas+]": "/score/saraba.json"
 }
 
 export const SCORES_GRAND = {

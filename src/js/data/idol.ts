@@ -162,7 +162,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["マジック12中pa3", "pa", 12, "中", "magic"],
     ],
 
-    scoregenre: [
+    スコア系: [
         ["コンセ7高cu", "cu", 7, "高", "concent"],
         ["コンセ7高co", "co", 7, "高", "concent"],
         ["コンセ7高pa", "pa", 7, "高", "concent"],
@@ -189,7 +189,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["スラアク11高pa", "pa", 11, "高", "slideact"],
     ],
 
-    combogenre: [
+    コンボ系: [
         ["オルラン5高cu", "cu", 5, "高", "allround"],
         ["オルラン5高co", "co", 5, "高", "allround"],
         ["オルラン5高pa", "pa", 5, "高", "allround"],
@@ -216,7 +216,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["コンボナ13高cu", "cu", 13, "高", "combona"],
     ],
 
-    bothgenre: [
+    コーデ系: [
         ["コーデ7高cu", "cu", 7, "高", "coode"],
         ["コーデ7高co", "co", 7, "高", "coode"],
         ["コーデ7高pa", "pa", 7, "高", "coode"],
