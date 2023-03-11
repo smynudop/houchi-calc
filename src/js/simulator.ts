@@ -165,13 +165,13 @@ class Music {
                 if (note.no == 0) {
                     return this.decreaseLife.tap
                 }
-                result = this.decreaseLife[note.type]
+                return this.decreaseLife[note.type]
 
             case "normal":
                 if (note.no != 0) {
-                    result = this.decreaseLife.long
+                    return this.decreaseLife.long
                 }
-                result = this.decreaseLife[note.type]
+                return this.decreaseLife[note.type]
         }
         if (result === undefined) {
             console.warn("ライフが取得できません", note.type)
