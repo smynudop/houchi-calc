@@ -12,6 +12,7 @@ module.exports = {
     entry: {
         grand: "./src/js/exec_grand.ts",
         normal: "./src/js/exec_normal.ts",
+        gachi_grand: "./src/js/gachi_grand.ts",
         houchi: "./src/css/houchi.scss",
     },
 
@@ -67,6 +68,13 @@ module.exports = {
             filename: `skill_grand.html`,
             template: `./src/html/skill_grand.html`,
             chunks: ["grand", "houchi"],
+            hash: true,
+        }),
+        new HtmlWebpackPlugin({
+            inject: "body",
+            filename: `gachi_grand.html`,
+            template: `./src/html/gachi_grand.html`,
+            chunks: ["gachi_grand", "houchi"],
             hash: true,
         }),
     ],

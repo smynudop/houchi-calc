@@ -1,32 +1,53 @@
-type IJudge = "perfect" | "gone" | "guard" | "miss"
+type Judge = "perfect" | "gone" | "guard" | "miss"
 type IAttr = "cu" | "co" | "pa"
-type IATime = "l" | "ml" | "m" | "ms" | "s" | "sp"
+type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"
 type ILiveType = "normal" | "grand"
-type INoteType = "tap" | "flick_left" | "flick_right" | "long" | "slide"
+type INoteType = "tap" | "flick_left" | "flick_right" | "flick" | "long" | "slide"
 type ISkillFrame = "score" | "combo" | "slide" | "heal" | "support" | "guard" | "boost" | "cover"
 
-interface eachSkill {
-    name: string
-    num: number
-}
+const skillNameList = [
+    "support",
+    "tuning",
 
-type activeSkill = {
-    [k in ISkillFrame]: number
-}
+    "heal",
+    "synergy",
+    "allround",
 
-interface activatedSkill {
-    no: number
-    time: number
-    skill: Skill
-}
+    "ssrguard",
+    "guard",
+
+    "symfony",
+    "ensemble",
+    "boost",
+    "srboost",
+
+    "motif",
+
+    "concent",
+    "slideact",
+
+    "combona",
+    "coode",
+
+    "encore",
+    "refrain",
+
+    "alternate",
+    "mutual",
+
+    "magic",
+
+    "none",
+] as const
+type ISkillName = typeof skillNameList[number]
 
 interface INote {
     type: INoteType
     no: number
     frame: number
     score?: number
-    result?: IJudge
+    result?: Judge
 }
 
 interface LongInfo {
@@ -41,13 +62,58 @@ interface IMemory {
     member: string[]
 }
 
-type IidolProfile = readonly [string, IAttr, number, string, IskillName]
+type IdolProfile = readonly [string, IAttr, number, string, ISkillName]
 
-type IboostEffect = {
+type BoostEffect = {
     boost: number
     cover: number
 }
 
-type IDecreaseLife = {
+type DecreaseLife = {
     [k in INoteType]: number
 }
+
+type Buff = {
+    [k in ISkillFrame]?: number
+}
+type RequiredBuff = Required<Buff>
+
+type SkillEffect = {
+    name: ISkillName
+    nameja: string
+} & Buff
+type MaybeSkillEffect = SkillEffect | null
+
+type ISkill = {
+    type: ISkillName
+    nameja: string
+    activeSkill: Buff
+    isMagic: boolean
+    isEncore: boolean
+    atype: ATime
+    execute(applyBuffList: Buff[], encoreAbility: MaybeAbility, magicSkillList: ISkill[]): Ability
+}
+
+type Ability = {
+    type: ISkillName
+    nameja: string
+    executeType: ISkillName
+    isMagic: boolean
+    isEncoreTarget: boolean
+    message: string
+    exec: (life: number) => AbilityResponse
+}
+type MaybeAbility = Ability | null
+
+type AbilityResponse = {
+    applyBuff: SkillEffect | null
+    activateBuffs: SkillEffect[]
+}
+
+type AbilityLog = {
+    time: number
+    position: number
+    ability: Ability
+}
+
+type FinallyAbility = (life: number) => RequiredBuff

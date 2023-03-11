@@ -12,10 +12,11 @@ export const CONF: Record<number, number> = {
     32: 2.4,
 } as const
 
-export const DECREASE_LIFE: Record<ILiveType, IDecreaseLife> = {
+export const DECREASE_LIFE: Record<ILiveType, DecreaseLife> = {
     normal: {
         tap: 20,
         long: 10,
+        flick: 20,
         flick_left: 20,
         flick_right: 20,
         slide: 10,
@@ -23,6 +24,7 @@ export const DECREASE_LIFE: Record<ILiveType, IDecreaseLife> = {
     grand: {
         tap: 10,
         long: 10,
+        flick: 20,
         flick_left: 20,
         flick_right: 20,
         slide: 20,
