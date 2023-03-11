@@ -17,7 +17,7 @@ module.exports = {
     },
 
     output: {
-        path: path.join(__dirname, "dist"),
+        path: path.join(__dirname, "dist_old"),
         filename: "js/[name].js",
     },
 
@@ -62,6 +62,9 @@ module.exports = {
             template: `./src/html/skill_normal.html`,
             chunks: ["normal", "houchi"],
             hash: true,
+            minify: {
+                removeComments: false
+            }
         }),
         new HtmlWebpackPlugin({
             inject: "body",
@@ -69,6 +72,9 @@ module.exports = {
             template: `./src/html/skill_grand.html`,
             chunks: ["grand", "houchi"],
             hash: true,
+            minify: {
+                removeComments: false
+            }
         }),
         new HtmlWebpackPlugin({
             inject: "body",
@@ -76,6 +82,9 @@ module.exports = {
             template: `./src/html/gachi_grand.html`,
             chunks: ["gachi_grand", "houchi"],
             hash: true,
+            minify: {
+                removeComments: false
+            }
         }),
     ],
 }

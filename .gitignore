@@ -5,6 +5,7 @@ dist/**/*
 node_modules/
 old/
 public/*
+dist_old/*
 
 
 package-lock.json

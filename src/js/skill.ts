@@ -319,11 +319,11 @@ export const SkillList: Record<ISkillName, ISkill> = {
     heal: new Skill2("heal", "回復", { heal: 3 }, "ms"),
     synergy: new Skill2("synergy", "シナジー", { score: 16, combo: 15, heal: 1 }, "m"),
     allround: new Skill2("allround", "オルラン", { combo: 13, heal: 1 }, "ms"),
-    ssrguard: new Skill2("guard", "ダメガ", { guard: 1 }, "m"),
+    ssrguard: new Skill2("guard", "ダメガ", { guard: 1 }, "l"),
     guard: new Skill2("guard", "ダメガ", { guard: 1 }, "m"),
 
     symfony: new Skill2("symfony", "シンフォ", { boost: 0.5, cover: 1 }, "m"),
-    ensemble: new Skill2("ensemble", "アンサン", {boost: 0.5}, "m"),
+    ensemble: new Skill2("ensemble", "アンサン", { boost: 0.5 }, "m"),
     boost: new Skill2("boost", "スキブ", { boost: 0.2, cover: 1 }, "l"),
     srboost: new Skill2("srboost", "SRスキブ", { boost: 0.1, cover: 1 }, "m"),
 

@@ -431,7 +431,7 @@ export class Simulator {
         let life = 0
         let notes = this.notes.disConnectLong(moment)
         for (let n of notes) {
-            life -= this.music.notesLife(n)
+            life -= this.music.notesLife(n)!
         }
         return life
     }
@@ -474,7 +474,7 @@ export class Simulator {
             isReset = true
             this.notes.disConnect(n.no)
 
-            let l = this.music.notesLife(n)
+            let l = this.music.notesLife(n)!
             life -= l
         }
         this.lifes.push(life)
