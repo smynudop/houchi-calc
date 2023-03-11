@@ -80,6 +80,8 @@ export class Unit {
                 let idol = idols[no]
                 let unitno = Math.floor(no / 5)
 
+                const position = this.isGrand ? `${["A", "B", "C"][unitno]}${no % 5 + 1}` : `${no + 1}`
+
                 let isActiveTiming = idol.isActiveTiming(time, unitno, musictime, this.isGrand)
 
                 if (isActiveTiming && idol.skill.type != "none") {
@@ -94,7 +96,7 @@ export class Unit {
                         applyResutLogList.push(time, no, ability)
                     }
 
-                    logs.push(`${time}s: [${no}] ${ability.message}`)
+                    logs.push(`${time}s: [${position}] ${ability.message}`)
 
                     let response = ability.exec(0)
                     activateSkillList = activateSkillList.concat(response.activateBuffs)

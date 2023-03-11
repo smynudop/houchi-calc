@@ -3,12 +3,18 @@ import { keyof } from "./data/data"
 import { LIFE_DEFAULT, MUSIC_MAXTIME, CONF, DECREASE_LIFE } from "./data/constants"
 
 class Score {
-    notes: INote[]
+    notes: INoteDetail[]
     offset: number
     longInfo: { [key: number]: LongInfo }
 
     constructor(notes: INote[], offset: number) {
-        this.notes = notes
+        this.notes = notes.map(x => {
+            return {
+                ...x,
+                score: 0,
+                result: "miss"
+            }
+        })
         this.offset = offset
         this.longInfo = {}
         this.setlongInfo()
@@ -131,9 +137,15 @@ class Music {
                 this.liveType = "grand"
                 break
 
-            default:
+            case "pro":
+            case "master":
+            case "master+":
+            case "witch":
                 this.liveType = "normal"
                 break
+
+            default:
+                console.warn("difficulityが不正です")
         }
 
         this.calcParam()
@@ -202,7 +214,7 @@ export class Simulator {
     isGrand: boolean
     music: Music
     isHouchi: boolean
-    cache: Map<string, any>
+    cache: Map<string, IMusic>
 
     constructor(unit: Unit, isGrand: boolean, isHouchi = true) {
         this.unit = unit
@@ -210,16 +222,16 @@ export class Simulator {
         this.isGrand = isGrand
         this.music = new Music()
         this.isHouchi = isHouchi
-        this.cache = new Map<string, any>()
+        this.cache = new Map<string, IMusic>()
     }
 
     async fetch(filename: string) {
-        let score: any
+        let score: IMusic
         if (this.cache.has(filename)) {
-            score = this.cache.get(filename)
+            score = this.cache.get(filename)!
         } else {
             const res = await fetch(filename)
-            score = await res.json()
+            score = await res.json() as IMusic
             this.cache.set(filename, score)
         }
 

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, defineProps, defineEmits } from "vue"
+import { ref, defineEmits } from "vue"
 import { Idol } from "../js/idol"
 const load = () => {
     try {

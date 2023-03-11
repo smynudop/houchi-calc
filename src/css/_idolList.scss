@@ -28,29 +28,29 @@
     flex-wrap: wrap;
     justify-content: start;
     align-content: flex-start;
-}
 
-.tab {
-    flex-basis: 25%;
-    height: 30px;
-    line-height: 30px;
-    font-size: 12px;
-    text-align: center;
-    background-color: var(--bg-color);
-    color: black;
+    .tab {
+        flex-basis: 25%;
+        height: 30px;
+        line-height: 30px;
+        font-size: 12px;
+        text-align: center;
+        background-color: var(--bg-color);
+        color: black;
 
-    border-right: 1px solid gray;
-    border-bottom: 1px solid gray;
-    margin: 1px 0px;
+        border-right: 1px solid gray;
+        border-bottom: 1px solid gray;
+        margin: 1px 0px;
 
-    user-select: none;
-}
+        user-select: none;
 
-.tab.tab_selected {
-    border-top: var(--highlight) 3px solid;
-    line-height: 24px;
-    background-color: white;
-    color: black;
+        &.tab_selected {
+            border-top: var(--highlight) 3px solid;
+            line-height: 24px;
+            background-color: white;
+            color: black;
+        }
+    }
 }
 
 #il_list {

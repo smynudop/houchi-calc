@@ -8,6 +8,7 @@ import { Idol, idols, damyidol } from "../js/idol"
 import IdolList from "./IdolList.vue"
 import AppHeader from "./AppHeader.vue";
 import Memory from "./Memory.vue";
+import Tabs from "./Tabs.vue"
 
 const props = withDefaults(defineProps<{
     isGrand: boolean,
@@ -17,9 +18,15 @@ const props = withDefaults(defineProps<{
     isHouchi: true
 })
 
-const tabs = [
+const headerTabs = [
     { id: "usage", name: "つかいかた" },
     { id: "memory", name: "編成記憶" }
+]
+const tabs = [
+    { id: "unit", name: "編成" },
+    { id: "unitDetail", name: "編成詳細" },
+    { id: "log", name: "発動ログ" },
+    { id: "setting", name: "設定" }
 ]
 
 const scores = getScoreList(props.isGrand)
@@ -128,7 +135,7 @@ onMounted(async () => {
 
 <template>
     <div>
-        <app-header :tabs="tabs">
+        <app-header :tabs="headerTabs">
             <template v-slot:usage>
                 ・TODO
             </template>
@@ -139,62 +146,35 @@ onMounted(async () => {
 
         <div style="height: 20px;"></div>
 
-        <div id="main">
+        <main>
             <div id="simulator">
-                曲名：{{ calcResponse?.musicName }}<br />
+                曲名：
+                <select id="simulator_music" v-model="option.scorePath" @change="onMusicChange">
+                    <option value="">
+                        ▼選択
+                    </option>
+                    <option v-for="score in scores" :value="score.path">
+                        {{ score.name }}
+                    </option>
+                </select><br />
+                アピール値:
+                <input type="number" v-model="option.appeal" @change="changeAppeal" /><br />
                 スコア：{{ calcResponse?.totalScore }}<br />
                 必要ライフ：{{ calcResponse?.unitLife }}<br />
                 miss区間：{{ calcResponse?.dangerTime }}<br />
                 MAXコンボ：{{ calcResponse?.maxCombo }}<br />
             </div>
-            <div id="log">
-                <a @click="showAllLog = !showAllLog">ログを表示</a>
-                <div v-if="showAllLog">
-                    <div v-for="log in calcResponse?.logs">{{ log }}</div>
-                </div>
-            </div>
-            <div id="status">
-                <div class="status_box">
-                    曲の秒数：
-                    <input type="number" v-model="option.musictime" @change="changeMusicTime" />
-                </div>
-                <div class="status_box">
-                    アピール値:
-                    <input type="number" v-model="option.appeal" @change="changeAppeal" />
-                </div>
-                <div class="status_box">
-                    レゾ判定
+
+            <Tabs :tabs="tabs">
+                <template v-slot:unit>
+                    <button type="button" @click="swap(0, 1)">AB入替●●○</button>
+                    <button type="button" @click="swap(0, 2)">BC入替●○●</button>
+                    <button type="button" @click="swap(1, 2)">AC入替○●●</button>
+                    ゲストレゾ
                     <input type="checkbox" v-model="option.isGuestRezo" @change="changeIsRezo" />
-                </div>
-                <div class="status_box">
-                    シミュレータ:
-                    <select id="simulator_music" v-model="option.scorePath" @change="onMusicChange">
-                        <option value="">
-                            ▼選択
-                        </option>
-                        <option v-for="score in scores" :value="score.path">
-                            {{ score.name }}
-                        </option>
-                    </select>
-                </div>
-
-                <input type="button" value="AB入替●●○" @click="swap(0, 1)" />
-                <input type="button" value="BC入替●○●" @click="swap(0, 2)" />
-                <input type="button" value="AC入替○●●" @click="swap(1, 2)" />
-                <input type="button" value="全リセット" @click="resetAll" />
-
-            </div>
-
-            <div id="matrix">
-                <table id="skilltable">
-                    <tr>
-                        <td colspan="5">ユニットB</td>
-                        <td colspan="5">ユニットA</td>
-                        <td colspan="5">ユニットC</td>
-                    </tr>
-
-                    <tr id="members">
-                        <td v-for="idol, i in _idols" class="member" :key="i">
+                    <button type="button" @click="resetAll">全リセット</button>
+                    <div id="unit">
+                        <div v-for="idol, i in _idols" class="member" :key="i">
                             <div class="icon" :class="{ 'icon_selected': selectedNo == i }" @click="selectFrame(i)">
                                 <img :src="'img/' + idol.name + '.png'" width="48" height="48" />
                             </div>
@@ -203,25 +183,64 @@ onMounted(async () => {
                                 {{ idol.secper }}
 
                             </div>
-                        </td>
-                        <td class='menu' id='menu_life'>ライフ</td>
-                        <td class='menu' colspan='2'>ノーツ</td>
-                        <td></td>
-                    </tr>
+                        </div>
+                    </div>
+                </template>
+                <template v-slot:unitDetail>
+                    <button type="button" @click="swap(0, 1)">AB入替●●○</button>
+                    <button type="button" @click="swap(0, 2)">BC入替●○●</button>
+                    <button type="button" @click="swap(1, 2)">AC入替○●●</button>
+                    ゲストレゾ
+                    <input type="checkbox" v-model="option.isGuestRezo" @change="changeIsRezo" />
+                    <button type="button" @click="resetAll">全リセット</button>
+                    <div id="tableWrapper">
+                        <table id="skilltable">
+                            <tr>
+                                <td colspan="5">ユニットB</td>
+                                <td colspan="5">ユニットA</td>
+                                <td colspan="5">ユニットC</td>
+                            </tr>
 
-                    <tr v-for="info in calcResponse?.momentInfo" class="timeline">
-                        <td v-for="skill in info.skillList" :class="skill?.type">
-                        </td>
-                        <td class="life" :class="'lifeper-' + info.life"></td>
-                        <td class="lifestate" :class="{ 'danger': info.judge == 'miss' }"></td>
-                        <td class="notes" :class="noteCssClass(info)"></td>
-                        <td v-if="info.moment % 20 == 0" rowspan="20" class="sec">{{ (info.moment) / 2 + 10}}</td>
-                    </tr>
-                </table>
-            </div>
+                            <tr id="members">
+                                <td v-for="idol, i in _idols" class="member" :key="i">
+                                    <div class="icon" :class="{ 'icon_selected': selectedNo == i }"
+                                        @click="selectFrame(i)">
+                                        <img :src="'img/' + idol.name + '.png'" width="48" height="48" />
+                                    </div>
+                                    <div class="disc" :class="idol.type" v-if="!idol.isdamy">
+                                        {{ idol.skill.nameja }}<br />
+                                        {{ idol.secper }}
+
+                                    </div>
+                                </td>
+                                <td class='menu' id='menu_life'>ライフ</td>
+                                <td class='menu' colspan='2'>ノーツ</td>
+                                <td></td>
+                            </tr>
+
+                            <tr v-for="info in calcResponse?.momentInfo" class="timeline">
+                                <td v-for="skill in info.skillList" :class="skill?.type">
+                                </td>
+                                <td class="life" :class="'lifeper-' + info.life"></td>
+                                <td class="lifestate" :class="{ 'danger': info.judge == 'miss' }"></td>
+                                <td class="notes" :class="noteCssClass(info)"></td>
+                                <td v-if="info.moment % 20 == 0" rowspan="20" class="sec">{{ (info.moment) / 2 + 10}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </template>
+                <template v-slot:log>
+                    <div class="eachlog" v-for="log in calcResponse?.logs">{{ log }}</div>
+                </template>
+                <template v-slot:setting>
+                    曲の秒数：
+                    <input type="number" v-model="option.musictime" @change="changeMusicTime" />
+                </template>
+            </Tabs>
             <div style="height: 50px"></div>
 
-        </div>
+        </main>
         <idol-list v-show="isShowIdolList" @close="isShowIdolList = false" @clear="changeIdol(null)"
             @select-idol="(idol) => changeIdol(idol[0])" />
         <div id="skilldetail">
@@ -230,6 +249,15 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
+input[type="text"],
+input[type="number"] {
+    width: 80px;
+}
+
+select {
+    max-width: 150px;
+}
+
 header {
     position: fixed;
     top: 0;
@@ -238,9 +266,11 @@ header {
     background-color: var(--bg-color);
 }
 
-#simulator,
-#log,
-#status {
+main {
+    padding: 5px;
+}
+
+#simulator {
     width: 100%;
     max-width: 640px;
     border: 2px solid #666;
@@ -248,8 +278,36 @@ header {
     margin-bottom: 10px;
 }
 
-#log {
+#unit {
+    width: 100%;
+    max-width: 640px;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    div.member {
+        flex: calc(20% - 8px);
+        text-align: center;
+
+
+        >div {
+            margin: 0 auto;
+        }
+    }
+
+    div.spacer {
+        flex-grow: 1;
+    }
+}
+
+#tableWrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.eachlog {
     white-space: pre-wrap;
-    font-family: monospace;
+    font-size: 90%;
 }
 </style>

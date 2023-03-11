@@ -4,5 +4,8 @@
     },
     "files.watcherExclude": {
         "**/js/**": true
+    },
+    "[json]": {
+        "editor.formatOnSave": false
     }
 }

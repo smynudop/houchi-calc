@@ -42,13 +42,7 @@ const skillNameList = [
 ] as const
 type ISkillName = typeof skillNameList[number]
 
-interface INote {
-    type: INoteType
-    no: number
-    frame: number
-    score?: number
-    result?: Judge
-}
+
 
 interface LongInfo {
     begin: number
@@ -111,3 +105,21 @@ type AbilityResponse = {
 }
 
 type FinallyAbility = (life: number) => RequiredBuff
+
+interface INote {
+    type: INoteType
+    no: number
+    frame: number
+}
+type INoteDetail = INote & {
+    score: number,
+    result: Judge
+}
+type IMusic = {
+    name: string
+    difficulity: IDifficult
+    level: number
+    offset: number
+    musictime: number
+    notes: INote[]
+}
