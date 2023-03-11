@@ -6,6 +6,6 @@ node_modules/
 old/
 public/*
 dist_old/*
-
-
+public/img/*
+public/score/*
 package-lock.json

@@ -4,12 +4,23 @@ body {
 }
 
 #ad {
-    position: static;
+    position: fixed;
     width: 100%;
+    max-width: 100%;
+    bottom: 0;
+    left: 0;
+    right: initial;
+    top: initial;
+
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    text-align: center;
 }
+
 #ad img {
     max-width: calc(100vw - 20px);
 }
+
 body {
     width: 100%;
     font-size: 13px;
@@ -45,7 +56,7 @@ body {
     height: 100dvh;
     background: rgba(0, 0, 0, 0.6);
 
-    #idollist_container{
+    #idollist_container {
         background-color: var(--bg-color);
     }
 }

@@ -15,7 +15,7 @@
     display: none;
 }
 
-#idollist_container{
+#idollist_container {
     width: 100%;
     height: 100%;
 }
@@ -26,12 +26,12 @@
     margin: 0;
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: start;
     align-content: flex-start;
 }
 
 .tab {
-    width: 24%;
+    flex-basis: 25%;
     height: 30px;
     line-height: 30px;
     font-size: 12px;
@@ -68,9 +68,9 @@
     display: flex;
     justify-content: center;
     gap: 5px;
-    
 
-    .button{
+
+    .button {
         flex: 0 0 40%;
         height: 40px;
         line-height: 40px;
@@ -83,7 +83,7 @@
     #il_clear {
         background-color: white;
     }
-    
+
     #il_close {
         background-color: navy;
         color: white;
@@ -103,12 +103,12 @@
         width: 60px;
         height: 60px;
         padding: 6px;
-    
-    
+
+
         &.icon_selected {
             background-color: var(--highlight);
         }
-    
+
         img {
             width: 48px;
             height: 48px;
@@ -147,7 +147,7 @@
 }
 
 .listgroop {
-    display: none;
+    //display: none;
     height: 100%;
     overflow: auto;
 }

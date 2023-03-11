@@ -19,6 +19,7 @@
     border-spacing: 0;
     table-layout: fixed;
 }
+
 td {
     text-align: center;
 
@@ -38,7 +39,7 @@ td {
         width: 10px;
     }
 
-    &.life{
+    &.life {
         width: 50px;
         min-width: 50px;
         border-right: 1px solid #666;
@@ -47,33 +48,39 @@ td {
     &.notes {
         width: 50px;
         min-width: 50px;
-        background-repeat: repeat-y;    
-        border-right: 1px solid #666;
-    }
-
-    &.member_0 {
-        border-left: 1px solid #666;
-    }
-    
-    &.member_4,
-    &.member_9,
-    &.member_14 {
+        background-repeat: repeat-y;
         border-right: 1px solid #666;
     }
 
     &.info {
         width: 50px;
     }
-    
+
 }
 
 
-tr.timeline td {
-    height: 5px;
-}
+tr.timeline {
 
-tr.timeline:nth-of-type(10n + 2) td {
-    border-bottom: 1px solid #666;
+    &:nth-of-type(10n + 2) td {
+        border-bottom: 1px solid #666;
+    }
+
+    td {
+        height: 5px;
+
+        &:nth-child(1) {
+            border-left: 1px solid #666;
+        }
+
+        &:nth-child(5),
+        &:nth-child(10),
+        &:nth-child(15) {
+            border-right: 1px solid #666;
+
+        }
+    }
+
+
 }
 
 .member {
@@ -85,13 +92,13 @@ tr.timeline:nth-of-type(10n + 2) td {
         padding: 2px;
         display: block;
         border-radius: 2px;
-    
+
         margin-bottom: 3px;
-    
+
         &.icon_selected {
             background-color: var(--highlight);
         }
-    
+
         img {
             width: 48px;
             height: 48px;
@@ -122,6 +129,7 @@ tr#members td {
     border-top: 1px solid #666;
     font-size: 10pt;
 }
+
 .disc {
     font-size: 8pt;
     width: 52px;

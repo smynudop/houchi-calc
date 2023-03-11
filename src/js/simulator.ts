@@ -1,11 +1,5 @@
-import { Unit } from "./houchi"
+import { Unit, Matrix, CalcRequest } from "./houchi"
 import { keyof } from "./data/data"
-import {
-    SCORES_GRAND,
-    SCORES_NORMAL,
-    SCORE_DEFAULT_GRAND,
-    SCORE_DEFAULT_NORMAL,
-} from "./data/score"
 import { LIFE_DEFAULT, MUSIC_MAXTIME, CONF, DECREASE_LIFE } from "./data/constants"
 
 class Score {
@@ -154,7 +148,6 @@ class Music {
 
     setMusictime(time: number) {
         this.musictime = time
-        $("#musictime").val(time)
     }
 
     notesLife(note: INote) {
@@ -180,83 +173,60 @@ class Music {
     }
 }
 
+type SimulatorResponse = {
+    momentInfos: SimulatorMomentInfo[]
+    musicName: string
+    totalScore: number
+    unitLife: number
+    dangerTime: number
+    maxCombo: number
+}
+
+export type SimulatorMomentInfo = {
+    finallyBuff: RequiredBuff | null
+    judge: Judge
+    notesLength: number
+    life: number
+}
+
+type JudgeResponse = {
+    addLife: number
+    combo: number
+    breakCombo: boolean
+    danger: boolean
+}
+
 export class Simulator {
     unit: Unit
     notes: Score
-    appeal: number
-    combo: number
-    combos: number[]
-    life: number
-    lifes: number[]
-    unitlife: number
-    skills: FinallyAbility[]
     isGrand: boolean
     music: Music
-    dangerMoment: number
     isHouchi: boolean
+    cache: Map<string, any>
 
-    constructor(unit: Unit, appeal: number, isGrand: boolean, isHouchi = true) {
+    constructor(unit: Unit, isGrand: boolean, isHouchi = true) {
         this.unit = unit
         this.notes = new Score([], 0)
-        this.appeal = appeal
-        this.combo = 0
-        this.combos = []
-        this.life = 1000
-        this.lifes = []
-        this.unitlife = LIFE_DEFAULT
-        this.skills = []
         this.isGrand = isGrand
         this.music = new Music()
-        this.dangerMoment = 0
         this.isHouchi = isHouchi
-
-        this.init()
-        this.load()
+        this.cache = new Map<string, any>()
     }
 
-    load() {
-        if (this.isGrand) {
-            this.fetch(SCORE_DEFAULT_GRAND)
+    async fetch(filename: string) {
+        let score: any
+        if (this.cache.has(filename)) {
+            score = this.cache.get(filename)
         } else {
-            this.fetch(SCORE_DEFAULT_NORMAL)
-        }
-    }
-
-    fetch(filename: string) {
-        fetch(filename)
-            .then(function (r) {
-                return r.json()
-            })
-            .then((json) => {
-                this.notes = new Score(json.notes, json.offset)
-                this.music.set(json.name, json.level, json.difficulity)
-                this.music.setMusictime(json.musictime)
-                this.setnotesbar()
-                this.unit.disp()
-            })
-            .catch((e) => {
-                //console.log(e)
-            })
-    }
-
-    setnotesbar() {
-        for (let moment = 0; moment < MUSIC_MAXTIME * 2; moment++) {
-            let noteslength = this.notes.pick(moment).length
-            if (noteslength > 10) noteslength = 10
-            $(`#notes_${moment}`).attr("class", "notes").addClass(`notenum_${noteslength}`)
-        }
-    }
-
-    init() {
-        let opts = this.isGrand ? SCORES_GRAND : SCORES_NORMAL
-        for (let opt of keyof(opts)) {
-            $("<option></option>").html(opt).val(opts[opt]).appendTo("#simulator_music")
+            const res = await fetch(filename)
+            score = await res.json()
+            this.cache.set(filename, score)
         }
 
-        let _this = this
-        $("#simulator_music").change(function () {
-            _this.fetch(String($(this).val()!))
-        })
+
+        this.notes = new Score(score.notes, score.offset)
+        this.music.set(score.name, score.level, score.difficulity)
+        this.music.setMusictime(score.musictime)
     }
 
     get totalScore() {
@@ -271,142 +241,158 @@ export class Simulator {
         this.notes.setOffset(offset)
     }
 
-    setAppeal(appeal: number) {
-        this.appeal = appeal
-    }
-
     setMusictime(time: number) {
         this.music.setMusictime(time)
     }
 
-    setSkill(skills: FinallyAbility[]) {
-        this.skills = skills
-        this.calc()
-    }
-
     reset() {
-        this.combo = 0
-        this.combos = []
-        this.life = 1000
-        this.lifes = []
-        this.dangerMoment = 0
         this.notes.reset()
-        $(".notes").removeClass("notes_perfect notes_miss notes_danger")
-        $(".life").attr("style", "")
-        $(".lifestate").attr("class", "lifestate")
     }
 
-    resetCombo() {
-        if (this.combo) this.combos.push(this.combo)
-        this.combo = 0
+    basicValue(appeal: number) {
+        return (appeal * this.music.coefficient) / this.notes.length
     }
 
-    get basicValue() {
-        return (this.appeal * this.music.coefficient) / this.notes.length
-    }
-
-    get combobonus() {
+    combobonus(combo: number) {
         let allnote = this.notes.length
-        if (this.combo >= Math.floor(allnote * 0.9)) return 2.0
-        if (this.combo >= Math.floor(allnote * 0.8)) return 1.7
-        if (this.combo >= Math.floor(allnote * 0.7)) return 1.5
-        if (this.combo >= Math.floor(allnote * 0.5)) return 1.4
-        if (this.combo >= Math.floor(allnote * 0.25)) return 1.3
-        if (this.combo >= Math.floor(allnote * 0.1)) return 1.2
-        if (this.combo >= Math.floor(allnote * 0.05)) return 1.1
+        if (combo >= Math.floor(allnote * 0.9)) return 2.0
+        if (combo >= Math.floor(allnote * 0.8)) return 1.7
+        if (combo >= Math.floor(allnote * 0.7)) return 1.5
+        if (combo >= Math.floor(allnote * 0.5)) return 1.4
+        if (combo >= Math.floor(allnote * 0.25)) return 1.3
+        if (combo >= Math.floor(allnote * 0.1)) return 1.2
+        if (combo >= Math.floor(allnote * 0.05)) return 1.1
         return 1.0
     }
 
-    calc() {
+    async calc(matrix: Matrix, req: CalcRequest): Promise<SimulatorResponse> {
         this.reset()
-        for (let moment = 0; moment < this.skills.length; moment++) {
-            let skill = this.skills[moment](this.life)
-            this.setTotalSkill(moment, skill)
+        if (req.scorePath != "") {
+            await this.fetch(req.scorePath)
 
-            let isPerfect = !this.isHouchi || skill.support >= 4
+        }
 
-            if (isPerfect) {
-                this.perfect(moment, skill)
-            } else if (skill.guard > 0) {
-                this.guard(moment)
+        const momentInfos: SimulatorMomentInfo[] = []
+
+        let dangerMoment = 0
+        let life = 0
+        const addLifes = []
+        const combos: number[] = []
+        let combo: number = 0
+
+        for (let moment = 0; moment < matrix.skillMatrix.length; moment++) {
+            const info = matrix.skillMatrix[moment]
+
+            const skill = info.finallyAbility!(life)
+
+            let judge: Judge = "miss"
+            if (!this.isHouchi) {
+                judge = "perfect"
             } else {
-                this.miss(moment)
+                if (skill.support >= 4) {
+                    judge = "perfect"
+                } else if (skill.guard > 0) {
+                    judge = "guard"
+                }
             }
-        }
-        this.resetCombo()
-        this.dispLife()
 
-        let result = `シミュレータ(β): ${this.music.name}<br>
-        スコア: ${this.totalScore}<br>
-        必要ライフ: ${this.unitlife}<br>
-        miss区間：${this.dangerMoment / 2}秒<br>
-        MAXコンボ：${Math.max(...this.combos, 0)}`
-        $("#simulator").html(result)
+            let jres: JudgeResponse
+            switch (judge) {
+                case "perfect":
+                    jres = this.perfect(moment, skill, combo, req.appeal)
+                    break
+                case "guard":
+                    jres = this.guard(moment)
+                    break
+                case "miss":
+                    jres = this.miss(moment)
+                    break
+            }
+            addLifes.push(jres.addLife)
+            if (jres.breakCombo) {
+                combos.push(combo)
+                combo = 0
+            } else {
+                combo = jres.combo
+            }
+            if (jres.danger && moment < this.music.musictime * 2) {
+                dangerMoment++
+            }
+
+            momentInfos.push({
+                finallyBuff: skill,
+                judge,
+                life: 0,
+                notesLength: this.notes.pick(moment).length
+            })
+
+
+        }
+
+        const lifeResponse = this.calcLife(addLifes)
+        for (const [i, info] of momentInfos.entries()) {
+            info.life = lifeResponse.percentList[i]
+        }
+
+
+        return {
+            momentInfos,
+            musicName: this.music.name,
+            totalScore: this.totalScore,
+            unitLife: lifeResponse.requiredLife,
+            dangerTime: dangerMoment / 2,
+            maxCombo: Math.max(...combos, 0)
+        }
+
+
+
     }
 
-    setTotalSkill(moment: number, skill: RequiredBuff) {
+    calcLife(lifes: number[]) {
 
-        let txt = ""
-        if (this.isHouchi) {
-            txt = `スコア${skill.score}/コンボ${skill.combo}
-サポ${skill.support}
-回復${skill.heal}/ダメガ${skill.guard}`
-        } else {
-            txt = `スコア${skill.score}/コンボ${skill.combo}
-スライド${skill.slide}
-回復${skill.heal}`
+        const requiredLife = this.getRequiredLife(lifes)
+        const unitlife = Math.max(requiredLife, LIFE_DEFAULT)
+
+        let simuLife = unitlife
+
+        let percentList: number[] = []
+
+        for (let moment = 0; moment < MUSIC_MAXTIME * 2; moment++) {
+            simuLife += lifes[moment]
+            simuLife = Math.min(simuLife, unitlife * 2)
+
+            let percent = Math.ceil((simuLife * 100) / unitlife)
+            percent = Math.min(200, percent)
+            percent = Math.max(0, percent)
+
+            percentList.push(percent)
         }
-        $("#notes_" + moment).data("skillname", txt)
+
+        return {
+            requiredLife,
+            percentList
+        }
     }
 
-    dispLife() {
-        console.log(JSON.stringify(this.lifes))
+    getRequiredLife(lifes: number[]) {
         let lifeSimu: number[] = []
         let life = 0
-        for (let l of this.lifes) {
+        for (let l of lifes) {
             life -= l
             lifeSimu.push(life)
         }
-        let requiredLife = Math.max(...lifeSimu) + 1
-        this.unitlife = requiredLife
-
-        let unitlife = Math.max(requiredLife, LIFE_DEFAULT)
-        life = unitlife
-
-        $("#menu_life").html(`ライフ<br>(${life})`)
-
-        for (let moment = 0; moment < MUSIC_MAXTIME * 2; moment++) {
-            life += this.lifes[moment]
-            if (life > unitlife * 2) life = unitlife * 2
-
-            let percent = Math.ceil((life * 100) / (unitlife * 2))
-            if (percent > 100) percent = 100
-            if (percent < 0) percent = 0
-
-            if (percent > 50) {
-                percent = (percent - 50) * 2
-                $(`#life_${moment}`).attr(
-                    "style",
-                    `background:linear-gradient(to right, deepskyblue, deepskyblue ${percent}%, limegreen ${percent}%, limegreen);`
-                )
-            } else if (percent > 0) {
-                percent = percent * 2
-                $(`#life_${moment}`).attr(
-                    "style",
-                    `background:linear-gradient(to right, limegreen, limegreen ${percent}%, white ${percent}%, white);`
-                )
-            } else {
-                $(`#life_${moment}`).attr("style", `background-color:lightsalmon;`)
-            }
-        }
+        return Math.max(...lifeSimu) + 1
     }
 
-    perfect(moment: number, bonus: RequiredBuff) {
-        let score = (100 + bonus.score) / 100
-        let combo = (100 + bonus.combo) / 100
+    perfect(moment: number, bonus: RequiredBuff, nowcombo: number, appeal: number): JudgeResponse {
+        let scoreBonus = (100 + bonus.score) / 100
+        let comboBonus = (100 + bonus.combo) / 100
         let slide = (100 + bonus.slide) / 100
 
+        let basicValue = this.basicValue(appeal)
+
         let life = 0
+        let combo = nowcombo
 
         let notes = this.notes.pick(moment)
         for (let n of notes) {
@@ -414,17 +400,20 @@ export class Simulator {
                 n.result = "gone"
                 continue
             }
-            this.combo++
-            let skill_scorebonus = n.no && this.isGrand ? Math.max(score, slide) : score
-            let combobonus = this.combobonus
-            let skill_combobonus = this.combo == 1 ? 1 : combo
+            combo++
+            let skill_scorebonus = n.no && this.isGrand ? Math.max(scoreBonus, slide) : scoreBonus
+            let skill_combobonus = combo == 1 ? 1 : comboBonus
 
-            n.score = Math.round(this.basicValue * skill_scorebonus * skill_combobonus * combobonus)
+            n.score = Math.round(basicValue * skill_scorebonus * skill_combobonus * this.combobonus(combo))
             n.result = "perfect"
             life += bonus.heal
         }
-        this.lifes.push(life)
-        $(`#notes_${moment}`).addClass(`notes_perfect`)
+        return {
+            addLife: life,
+            combo,
+            breakCombo: false,
+            danger: false
+        }
     }
 
     disConnectLong(moment: number) {
@@ -436,7 +425,7 @@ export class Simulator {
         return life
     }
 
-    guard(moment: number) {
+    guard(moment: number): JudgeResponse {
         let life = this.disConnectLong(moment)
         let isReset = life < 0
 
@@ -450,20 +439,19 @@ export class Simulator {
             isReset = true
             this.notes.disConnect(n.no)
         }
-        if (isReset) this.resetCombo()
-        this.lifes.push(0)
-        $(`#notes_${moment}`).addClass(`notes_miss`)
+        return {
+            addLife: 0,
+            combo: 0,
+            breakCombo: isReset,
+            danger: false
+        }
     }
 
-    miss(moment: number) {
+    miss(moment: number): JudgeResponse {
         let life = this.disConnectLong(moment)
         let isReset = life < 0
 
         let notes = this.notes.pick(moment)
-
-        if (moment < this.music.musictime * 2) {
-            this.dangerMoment++
-        }
 
         for (let n of notes) {
             if (!this.notes.isContinue(n.no)) {
@@ -471,15 +459,16 @@ export class Simulator {
                 continue
             }
             n.result = "miss"
-            isReset = true
             this.notes.disConnect(n.no)
 
             let l = this.music.notesLife(n)!
             life -= l
         }
-        this.lifes.push(life)
-        if (isReset) this.resetCombo()
-        $(`#lifestate_${moment}`).addClass(`danger`)
-        $(`#notes_${moment}`).addClass(`notes_danger`)
+        return {
+            addLife: life,
+            combo: 0,
+            breakCombo: isReset,
+            danger: true
+        }
     }
 }

@@ -32,23 +32,19 @@ export class SkillHelper {
     static boost(skill: MaybeSkillEffect, boostEffect: BoostEffect): MaybeSkillEffect {
         if (skill == null) return null
 
-        if(skill.guard ?? 0 > 0){
-            console.log(skill)
-        }
-
         const boost = 1 + boostEffect.boost
         let r = {
             name: skill.name,
             nameja: skill.nameja,
             score: skill.score == null ? 0
-                   : skill.score < 0 ? skill.score
-                   : Math.ceil(skill.score * boost),
+                : skill.score < 0 ? skill.score
+                    : Math.ceil(skill.score * boost),
             combo: skill.combo == null ? 0
                 : skill.combo < 0 ? skill.combo
-                : Math.ceil(skill.combo * boost),
+                    : Math.ceil(skill.combo * boost),
             slide: skill.slide == null ? 0
                 : skill.slide < 0 ? skill.slide
-                : Math.ceil(skill.slide * boost),
+                    : Math.ceil(skill.slide * boost),
             heal:
                 Math.max(
                     Math.ceil((skill.heal ?? 0) * boost),
@@ -58,10 +54,6 @@ export class SkillHelper {
             guard: skill.guard ?? 0,
             boost: skill.boost ?? 0,
             cover: skill.cover ?? 0,
-        }
-
-        if(skill.guard ?? 0 > 0){
-            console.log(r)
         }
 
         return r
@@ -109,13 +101,13 @@ export class SkillHelper {
         }
     }
 
-    static calc(abilities: (Ability | null)[], isRezo: boolean[]) {
+    static calc(abilities: (Ability | null)[], isRezo: boolean[]): FinallyAbility {
         return (life: number) => {
             const allBuffs = abilities.map((s) => (s != null ? s.exec(life).applyBuff : null))
 
-            for(const buff of allBuffs){
+            for (const buff of allBuffs) {
                 if (!buff) continue
-                if (buff.slide == null || buff.slide < (buff.score ?? 0)){
+                if (buff.slide == null || buff.slide < (buff.score ?? 0)) {
                     buff.slide = buff.score
                 }
             }

@@ -22,14 +22,6 @@ input[type="number"] {
     padding: 10px;
 }
 
-#simulator,
-#status {
-    width: 640px;
-    border: 2px solid #666;
-    padding: 5px;
-    margin-bottom: 10px;
-}
-
 
 select {
     max-width: 150px;
@@ -38,9 +30,11 @@ select {
 .cute {
     background-color: #ffb7ff;
 }
+
 .cool {
     background-color: #b7ffff;
 }
+
 .passion {
     background-color: #ffdbb7;
 }
@@ -51,6 +45,6 @@ select {
 @import "./skill";
 @import "./table";
 
-@media screen and (max-width: 480px){
+@media screen and (max-width: 480px) {
     @import "./smartphone";
 }

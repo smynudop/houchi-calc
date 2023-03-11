@@ -110,10 +110,4 @@ type AbilityResponse = {
     activateBuffs: SkillEffect[]
 }
 
-type AbilityLog = {
-    time: number
-    position: number
-    ability: Ability
-}
-
 type FinallyAbility = (life: number) => RequiredBuff

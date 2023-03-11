@@ -1,5 +1,8 @@
-import { Unit } from "./houchi"
+import App from "../components/App.vue"
+import "../css/houchi.scss"
+import { createApp } from 'vue'
 
-window.addEventListener("load", function () {
-    const lc = new Unit(true)
-})
+createApp(App, {
+    isGrand: true,
+    isHouchi: true
+}).mount("#app")

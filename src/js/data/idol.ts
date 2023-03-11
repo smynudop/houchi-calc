@@ -1,5 +1,5 @@
 export const cards: { [k: string]: readonly IdolProfile[] } = {
-    symfony: [
+    シンフォ: [
         ["シンフォ7高cu", "cu", 7, "高", "symfony"],
         ["シンフォ7高co", "co", 7, "高", "symfony"],
         ["シンフォ7高pa", "pa", 7, "高", "symfony"],
@@ -11,7 +11,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["シンフォ11高pa", "pa", 11, "高", "symfony"],
     ],
 
-    boost: [
+    スキブ: [
         ["スキブ7高cu", "cu", 7, "高", "boost"],
         ["スキブ7高co", "co", 7, "高", "boost"],
         ["スキブ7高pa", "pa", 7, "高", "boost"],
@@ -32,7 +32,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["srスキブ11高pa", "pa", 11, "高", "srboost"],
     ],
 
-    support: [
+    サポート: [
         ["サポート9高cu", "cu", 9, "高", "support"],
         ["サポート12高co", "co", 12, "高", "support"],
         ["サポート15高pa", "pa", 15, "高", "support"],
@@ -44,7 +44,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["サポート15高co", "co", 15, "高", "support"],
     ],
 
-    heal: [
+    回復: [
         ["回復7中", "cu", 7, "中", "heal"],
         ["回復8高", "cu", 8, "高", "heal"],
         ["回復9中", "cu", 9, "中", "heal"],
@@ -53,7 +53,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["回復育成", "cu", 7, "無", "heal"],
     ],
 
-    guard: [
+    ダメガ: [
         ["ssrダメガ7高cu", "cu", 7, "高", "ssrguard"],
         ["ssrダメガ7高co", "co", 7, "高", "ssrguard"],
         ["ssrダメガ7高pa", "pa", 7, "高", "ssrguard"],
@@ -78,7 +78,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["ダメガ8中cu", "cu", 8, "中", "guard"],
     ],
 
-    synergy: [
+    シナジー: [
         ["シナジー7高cu", "cu", 7, "高", "synergy"],
         ["シナジー7高co", "co", 7, "高", "synergy"],
         ["シナジー7高pa", "pa", 7, "高", "synergy"],
@@ -90,7 +90,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["シナジー11高pa", "pa", 11, "高", "synergy"],
     ],
 
-    tuning: [
+    チュニ: [
         ["チューニング7高cu", "cu", 7, "高", "tuning"],
         ["チューニング7高co", "co", 7, "高", "tuning"],
         ["チューニング7高pa", "pa", 7, "高", "tuning"],
@@ -108,7 +108,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["チューニング13高pa", "pa", 13, "高", "tuning"],
     ],
 
-    encore: [
+    アンコール: [
         ["アンコ9中cu", "cu", 9, "中", "encore"],
         ["アンコ9中co", "co", 9, "中", "encore"],
         ["アンコ9中pa", "pa", 9, "中", "encore"],
@@ -126,7 +126,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["アンコ18中pa", "pa", 18, "中", "encore"],
     ],
 
-    motif: [
+    モチーフ: [
         ["モチーフ7高cu", "cu", 7, "高", "motif"],
         ["モチーフ7高co", "co", 7, "高", "motif"],
         ["モチーフ7高pa", "pa", 7, "高", "motif"],
@@ -138,7 +138,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["モチーフ11高pa", "pa", 11, "高", "motif"],
     ],
 
-    refrain: [
+    リフレイン: [
         ["リフレイン7高cu", "cu", 7, "高", "refrain"],
         ["リフレイン7高co", "co", 7, "高", "refrain"],
         ["リフレイン7高pa", "pa", 7, "高", "refrain"],
@@ -150,7 +150,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["リフレイン11高pa", "pa", 11, "高", "refrain"],
     ],
 
-    magic: [
+    マジック: [
         ["マジック12中cu", "cu", 12, "中", "magic"],
         ["マジック12中co", "co", 12, "中", "magic"],
         ["マジック12中pa", "pa", 12, "中", "magic"],
@@ -238,7 +238,7 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["アンサンブル4高cu", "cu", 4, "高", "ensemble"],
         ["アンサンブル6中cu", "cu", 6, "中", "ensemble"],
         ["アンサンブル13高cu", "cu", 13, "高", "ensemble"],
-       
+
 
     ]
 } as const
