@@ -4,23 +4,26 @@
 .rsupport {
     background-color: orange;
 }
+
 .tuning {
     background-color: gold;
 }
 
 .guard,
 .ssrguard {
-    background-color: turquoise;
+    background-color: rgb(107, 226, 214);
 }
 
 .boost {
     background-color: #f74343;
     color: white;
 }
+
 .srboost {
     background-color: tomato;
     color: white;
 }
+
 .symfony,
 .ensemble {
     background-color: crimson;
@@ -28,15 +31,13 @@
 }
 
 .magic {
-    background: linear-gradient(
-        to right,
-        #f99 0%,
-        #ff9 20%,
-        #9f9 40%,
-        #9ff 60%,
-        #99f 80%,
-        #f9f 100%
-    );
+    background: linear-gradient(to right,
+            #f99 0%,
+            #ff9 20%,
+            #9f9 40%,
+            #9ff 60%,
+            #99f 80%,
+            #f9f 100%);
 }
 
 .rezo {
@@ -51,12 +52,13 @@
 .coode {
     background-color: violet;
 }
+
 .synergy {
     background-color: hotpink;
 }
 
 .allround {
-    background-color: mediumseagreen;
+    background-color: rgb(115, 202, 155);
 }
 
 .heal {
@@ -73,6 +75,7 @@
     background-color: #4046ff;
     color: white;
 }
+
 .motif {
     background-color: #3433a3;
     color: white;
@@ -86,7 +89,8 @@
     background-color: silver;
 }
 
-.alternate, .mutual{
+.alternate,
+.mutual {
     background-color: pink;
 }
 

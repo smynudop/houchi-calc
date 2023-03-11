@@ -18,17 +18,9 @@ body {
     height: 100%;
 }
 
-#ad {
-    position: absolute;
-    right: 0;
-    top: 24px;
-}
 
-
-@import "./idolList";
 @import "./notes_bar";
 @import "./skill";
-@import "./table";
 
 @media screen and (max-width: 480px) {
     @import "./smartphone";

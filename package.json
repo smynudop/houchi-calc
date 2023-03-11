@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "devDependencies": {
+    "@types/marked": "^4.0.8",
     "@vitejs/plugin-vue": "^4.0.0",
+    "marked": "^4.2.12",
     "scss": "^0.2.4",
     "typescript": "^4.6.4",
     "vite": "^4.0.4",
@@ -17,5 +19,8 @@
     "watch": "vite"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@egjs/vue3-flicking": "^4.10.5"
+  }
 }
