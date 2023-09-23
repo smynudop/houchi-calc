@@ -197,7 +197,7 @@ type SimulatorResponse = {
 export type SimulatorMomentInfo = {
     finallyBuff: RequiredBuff | null
     judge: Judge
-    notesLength: number
+    notes: INoteDetail[]
     life: number
 }
 
@@ -335,7 +335,7 @@ export class Simulator {
                 finallyBuff: skill,
                 judge,
                 life: 0,
-                notesLength: this.notes.pick(moment).length
+                notes: this.notes.pick(moment)
             })
 
 

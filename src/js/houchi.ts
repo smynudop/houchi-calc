@@ -23,7 +23,6 @@ export type CalcRequest = {
     idols: Idol[],
     isGuestRezo: boolean,
     appeal: number,
-    musictime: number
     scorePath: string
 }
 export type CalcResponse = {
@@ -66,7 +65,6 @@ export class Unit {
             idols,
             isGuestRezo,
             appeal,
-            musictime,
             scorePath
         } = req
         const matrix = new Matrix(this.idolnum)
@@ -75,6 +73,8 @@ export class Unit {
         let applyResutLogList = new AbilityList()
         let logs: string[] = []
 
+        await this.simulator.fetch(scorePath)
+
         for (let time = 0; time < MUSIC_MAXTIME; time++) {
             for (let no = 0; no < this.idolnum; no++) {
                 let idol = idols[no]
@@ -82,7 +82,7 @@ export class Unit {
 
                 const position = this.isGrand ? `${["A", "B", "C"][unitno]}${no % 5 + 1}` : `${no + 1}`
 
-                let isActiveTiming = idol.isActiveTiming(time, unitno, musictime, this.isGrand)
+                let isActiveTiming = idol.isActiveTiming(time, unitno, this.simulator.music.musictime, this.isGrand)
 
                 if (isActiveTiming && idol.skill.type != "none") {
                     let skills = idols

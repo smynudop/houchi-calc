@@ -89,13 +89,13 @@ export class Idol {
     }
 }
 
-export const idols: Record<string, Idol> = {}
+export const idols: Map<string, Idol> = new Map
 export const damyidol = new Idol(["damy", "cu", 7, "無", "none"])
 
 for (let type of keyof(cards)) {
     for (let card of cards[type]) {
         //card.push(type)
-        idols[card[0]] = new Idol(card)
+        idols.set(card[0], new Idol(card))
     }
 }
-idols["damy"] = damyidol
+idols.set("damy", damyidol)

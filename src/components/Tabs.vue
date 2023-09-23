@@ -18,10 +18,10 @@ const selectTab = (tab: string) => {
 <template>
     <div>
         <div id="tabs">
-            <div v-for="tab in tabs" class="tab" :class="{ 'selected': activeTab == tab.id }"
-                @click="selectTab(tab.id)">
+            <div v-for="tab in tabs" class="tab" :class="{ 'selected': activeTab == tab.id }" @click="selectTab(tab.id)">
                 {{ tab.name }}</div>
         </div>
+        <slot name="common" />
 
         <div class="content" v-for="tab in tabs" v-show="activeTab == tab.id" :key="'tab_' + tab.id">
             <slot :name="tab.id">
@@ -38,13 +38,24 @@ const selectTab = (tab: string) => {
     display: flex;
     width: 100%;
     max-width: 640px;
-    height: 2rem;
+
+    gap: 0.5rem;
 
     margin-bottom: 1rem;
 
     .tab {
-        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         text-align: center;
+
+        width: 3rem;
+        height: 3rem;
+        padding: 2px;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        user-select: none;
+        cursor: pointer;
         background-color: #ccc;
         border: #ccc 1px solid;
 

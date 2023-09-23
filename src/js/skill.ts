@@ -18,7 +18,7 @@ class Skill2 implements ISkill {
     }
 
     execute(): Ability {
-        const skillEffect = {
+        const skillEffect: SkillEffect = {
             name: this.type,
             nameja: this.nameja,
             ...this.activeSkill,

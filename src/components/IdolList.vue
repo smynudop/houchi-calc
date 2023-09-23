@@ -4,7 +4,7 @@ import { cards } from "../js/data/idol"
 import { Idol, idols } from "../js/idol";
 import IdolVue from "./Idol.vue";
 import Flicking from "@egjs/vue3-flicking"
-
+import { SkillList } from "../js/skill";
 
 const props = defineProps<{
     idols: Idol[]
@@ -65,26 +65,47 @@ const selectNext = () => {
     }
 }
 
+type Profiles = {
+    list: IdolProfile[],
+    name: string
+}
+const cardBySkill = (idols: readonly IdolProfile[]): Profiles[] => {
+    const result: Profiles[] = []
+    let tmp: IdolProfile[] = []
+    let tmp2 = "" as ISkillName
+    for (const idol of idols) {
+        if (idol[4] != tmp2) {
+            if (tmp.length > 0) {
+                result.push({ list: tmp, name: SkillList[tmp2].nameja })
+                tmp = []
+            }
+            tmp2 = idol[4]
+        }
+        tmp.push(idol)
+    }
+    if (tmp.length > 0) {
+        result.push({ list: tmp, name: SkillList[tmp2].nameja })
+        tmp = []
+    }
+    return result
+}
+
 const isTate = ref<boolean>(false)
 
 
 </script>
 
 <template>
-    <button type="button" @click="isTate = !isTate">一覧表示</button>
-    <button type="button" @click="onClearButtonClick">クリア</button>
+    <!-- <button type="button" @click="isTate = !isTate">一覧表示</button> -->
+    <button type="button" @click="onClearButtonClick">はずす</button>
     <div class="unit">
-        <Flicking v-if="!isTate" ref="flicking" @changed="onMoveEnd" class="unit-yoko">
+        <!-- <Flicking v-if="!isTate" ref="flicking" @changed="onMoveEnd" class="unit-yoko">
             <div v-for="platoon, p in idolsByPlatoon" :key="p" class="platoon">
                 <idol-vue v-for="idol, i in platoon" @click="selectFrame(p * 5 + i)" :idol="idol"
                     :selected="selectedNo == p * 5 + i" />
-                <!-- <div v-for="idol, i in platoon" :key="(p * 5 + i)" class="icon"
-                    :class="{ 'icon_selected': selectedNo == p * 5 + i }" @click="selectFrame(p * 5 + i)">
-                    <img :src="'img/' + idol.name + '.png'" width="48" height="48" />
-                </div> -->
             </div>
-        </Flicking>
-        <div class="unit-tate" v-else>
+        </Flicking> -->
+        <div class="unit-tate">
             <div v-for="platoon, p in idolsByPlatoon" :key="p" class="platoon">
                 <idol-vue v-for="idol, i in platoon" @click="selectFrame(p * 5 + i)" :idol="idol"
                     :selected="selectedNo == p * 5 + i" />
@@ -102,11 +123,15 @@ const isTate = ref<boolean>(false)
         </div>
         <div id="il_list">
             <div class="listgroop" v-for="skilltype in skillTypes" v-show="skilltype == currentTab">
-                <div v-for="idol of cards[skilltype]" class="idol" :data-name="idol[0]" @click="selectIdol(idol)">
-                    <img :src="'img/' + idol[0] + '.png'" loading="lazy" />
-                    <div class="secper">
-                        {{ idol[2] + idol[3] }}</div>
-                </div>
+                <template v-for="profiles in cardBySkill(cards[skilltype])">
+                    <div class="header">{{ profiles.name }}</div>
+                    <div v-for="idol of profiles.list" class="idol" @click="selectIdol(idol)">
+                        <img :src="'img/' + idol[0] + '.png'" loading="lazy" />
+                        <div class="secper">
+                            {{ idol[2] + idol[3] }}</div>
+                    </div>
+                    <div class="spacer"></div>
+                </template>
             </div>
         </div>
     </div>
@@ -151,13 +176,14 @@ $bgColor: rgb(227, 229, 233);
 
     .tab {
         flex-basis: 25%;
-        height: 30px;
-        line-height: 30px;
+        height: 24px;
+        line-height: 24px;
         font-size: 12px;
         text-align: center;
         background-color: var(--bg-color);
         color: black;
 
+        border-top: transparent 2px solid;
         border-right: 1px solid gray;
         border-bottom: 1px solid gray;
         margin: 1px 0px;
@@ -165,8 +191,7 @@ $bgColor: rgb(227, 229, 233);
         user-select: none;
 
         &.tab_selected {
-            border-top: var(--highlight) 3px solid;
-            line-height: 24px;
+            border-top: var(--highlight) 2px solid;
             background-color: white;
             color: black;
         }
@@ -215,6 +240,7 @@ $bgColor: rgb(227, 229, 233);
         justify-content: center;
         scroll-snap-align: center;
         width: 100%;
+        gap: 6px;
 
         position: relative;
     }
@@ -226,19 +252,38 @@ $bgColor: rgb(227, 229, 233);
     overflow: auto;
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
+    //gap: 12px;
+
+    .header {
+        background-color: white;
+        font-size: 90%;
+        text-align: center;
+        border-radius: 0.5rem;
+        flex-basis: 100%;
+    }
+
+    .spacer {
+        flex-grow: 1;
+    }
 
     .idol {
-        flex-basis: 33%;
+        flex-basis: 16.66%;
+
+
 
         img {
             width: 48px;
             height: 48px;
-            display: inline;
+            //display: inline;
             cursor: pointer;
+            display: block;
         }
 
         div.secper {
-            display: inline;
+            font-size: 80%;
+            text-align: center;
+            //display: inline;
         }
     }
 }

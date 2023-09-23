@@ -12,7 +12,7 @@ const emits = defineEmits<{
     (e: "selectFrame", val: number): void
 }>()
 const noteCssClass = (info: CalcMomentInfo) => {
-    return `notenum_${info.notesLength} notes_${info.judge}`
+    return `notenum_${info.notes.length} notes_${info.judge}`
 }
 const selectFrame = (frame: number) => {
     emits("selectFrame", frame)
@@ -23,7 +23,7 @@ const selectFrame = (frame: number) => {
 <template>
     <div id="tableWrapper">
         <table id="skilltable">
-            <tr>
+            <tr v-show="idols.length == 15">
                 <td colspan="5">ユニットB</td>
                 <td colspan="5">ユニットA</td>
                 <td colspan="5">ユニットC</td>
@@ -44,7 +44,7 @@ const selectFrame = (frame: number) => {
                 <td class="life" :class="'lifeper-' + info.life"></td>
                 <td class="lifestate" :class="{ 'danger': info.judge == 'miss' }"></td>
                 <td class="notes" :class="noteCssClass(info)"></td>
-                <td v-if="info.moment % 20 == 0" rowspan="20" class="sec">{{ (info.moment) / 2 + 10}}
+                <td v-if="info.moment % 20 == 0" rowspan="20" class="sec">{{ (info.moment) / 2 + 10 }}
                 </td>
             </tr>
         </table>
