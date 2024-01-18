@@ -330,11 +330,11 @@ export class Simulator {
             } else if (skill.guard > 0) {
                 this.guard(moment)
             } else {
-                this.miss(moment)
+                this.miss(moment, skill)
             }
         }
         this.resetCombo()
-        this.dispLife()
+        this.dispLife(this.unit.list.some(i => i.isEternal))
 
         let result = `シミュレータ(β): ${this.music.name}<br>
         スコア: ${this.totalScore}<br>
@@ -347,10 +347,11 @@ export class Simulator {
     setTotalSkill(moment: number, skill: RequiredBuff) {
 
         let txt = ""
+        const cut = skill.guard >= 1 ? "100%" : `${skill.cut * 100}%`
         if (this.isHouchi) {
             txt = `スコア${skill.score}/コンボ${skill.combo}
 サポ${skill.support}
-回復${skill.heal}/ダメガ${skill.guard}`
+回復${skill.heal}/ダメガ${cut}`
         } else {
             txt = `スコア${skill.score}/コンボ${skill.combo}
 スライド${skill.slide}
@@ -359,21 +360,24 @@ export class Simulator {
         $("#notes_" + moment).data("skillname", txt)
     }
 
-    dispLife() {
-        console.log(JSON.stringify(this.lifes))
+    dispLife(start200: boolean) {
         let lifeSimu: number[] = []
         let life = 0
         for (let l of this.lifes) {
             life -= l
+            if (start200) life = Math.max(0, life)
             lifeSimu.push(life)
         }
-        let requiredLife = Math.max(...lifeSimu) + 1
+        let max = Math.max(...lifeSimu) - Math.min(...lifeSimu)
+        let requiredLife = start200 ? Math.floor(max / 2) + 1 : max + 1
         this.unitlife = requiredLife
 
         let unitlife = Math.max(requiredLife, LIFE_DEFAULT)
         life = unitlife
 
         $("#menu_life").html(`ライフ<br>(${life})`)
+
+        if (start200) life *= 2
 
         for (let moment = 0; moment < MUSIC_MAXTIME * 2; moment++) {
             life += this.lifes[moment]
@@ -455,7 +459,7 @@ export class Simulator {
         $(`#notes_${moment}`).addClass(`notes_miss`)
     }
 
-    miss(moment: number) {
+    miss(moment: number, bonus: RequiredBuff) {
         let life = this.disConnectLong(moment)
         let isReset = life < 0
 
@@ -475,7 +479,9 @@ export class Simulator {
             this.notes.disConnect(n.no)
 
             let l = this.music.notesLife(n)!
-            life -= l
+            let l2 = Math.floor(l * (1 - bonus.cut ?? 0))
+
+            life -= l2
         }
         this.lifes.push(life)
         if (isReset) this.resetCombo()

@@ -1,10 +1,10 @@
 type Judge = "perfect" | "gone" | "guard" | "miss"
 type IAttr = "cu" | "co" | "pa"
-type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp"
+type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp" | "eternal"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"
 type ILiveType = "normal" | "grand"
 type INoteType = "tap" | "flick_left" | "flick_right" | "flick" | "long" | "slide"
-type ISkillFrame = "score" | "combo" | "slide" | "heal" | "support" | "guard" | "boost" | "cover"
+type ISkillFrame = "score" | "combo" | "slide" | "heal" | "support" | "guard" | "boost" | "boost2" | "cover" | "cut"
 
 const skillNameList = [
     "support",
@@ -38,6 +38,8 @@ const skillNameList = [
 
     "magic",
 
+    "cristal",
+
     "none",
 ] as const
 type ISkillName = typeof skillNameList[number]
@@ -66,6 +68,7 @@ type IdolProfile = readonly [string, IAttr, number, string, ISkillName]
 
 type BoostEffect = {
     boost: number
+    boost2: number
     cover: number
 }
 

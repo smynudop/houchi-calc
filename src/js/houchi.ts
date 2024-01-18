@@ -170,7 +170,7 @@ export class Unit {
                 let idol = this.list[no]
                 let unitno = Math.floor(no / 5)
 
-                let isActiveTiming = idol.isActiveTiming(time, unitno, musictime, this.isGrand)
+                let isActiveTiming = idol.isActiveTiming(time, unitno, musictime, this.isGrand) || idol.isEternal
 
                 if (isActiveTiming && idol.skill.type != "none") {
                     let skills = this.list
@@ -372,11 +372,12 @@ class Matrix {
     }
 
     setTotalSkill(moment: number, skill: RequiredBuff) {
+        const cut = skill.guard >= 1 ? "100%" : `${skill.cut}%`
         $("#notes_" + moment).data(
             "skillname",
             `スコア${skill.score}/コンボ${skill.combo}
 サポ${skill.support}
-回復${skill.heal}/ダメガ${skill.guard}`
+回復${skill.heal}/ダメカ${cut}`
         )
     }
 

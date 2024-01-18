@@ -161,6 +161,9 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["マジック12中co3", "co", 12, "中", "magic"],
         ["マジック12中pa3", "pa", 12, "中", "magic"],
     ],
+    cristal: [
+        ["クリスタルイヴ", "pa", 1, "高", "cristal"],
+    ],
 
     スコア系: [
         ["コンセ7高cu", "cu", 7, "高", "concent"],
@@ -228,17 +231,17 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["コーデ11高pa", "pa", 11, "高", "coode"],
     ],
 
-    beta: [
-        ["オルタ6中cu", "cu", 9, "中", "alternate"],
-        ["オルタ6中cu", "co", 9, "中", "alternate"],
-        ["オルタ6中cu", "pa", 9, "中", "alternate"],
-        ["ミュー6中cu", "cu", 9, "中", "mutual"],
-        ["ミュー6中cu", "co", 9, "中", "mutual"],
-        ["ミュー6中cu", "pa", 9, "中", "mutual"],
-        ["アンサンブル4高cu", "cu", 4, "高", "ensemble"],
-        ["アンサンブル6中cu", "cu", 6, "中", "ensemble"],
-        ["アンサンブル13高cu", "cu", 13, "高", "ensemble"],
-       
+    // beta: [
+    //     ["オルタ6中cu", "cu", 9, "中", "alternate"],
+    //     ["オルタ6中cu", "co", 9, "中", "alternate"],
+    //     ["オルタ6中cu", "pa", 9, "中", "alternate"],
+    //     ["ミュー6中cu", "cu", 9, "中", "mutual"],
+    //     ["ミュー6中cu", "co", 9, "中", "mutual"],
+    //     ["ミュー6中cu", "pa", 9, "中", "mutual"],
+    //     ["アンサンブル4高cu", "cu", 4, "高", "ensemble"],
+    //     ["アンサンブル6中cu", "cu", 6, "中", "ensemble"],
+    //     ["アンサンブル13高cu", "cu", 13, "高", "ensemble"],
 
-    ]
+
+    // ]
 } as const

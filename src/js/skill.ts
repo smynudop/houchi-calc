@@ -41,6 +41,47 @@ class Skill2 implements ISkill {
     }
 }
 
+class Cristal implements ISkill {
+    type: ISkillName
+    nameja: string
+    activeSkill: Buff
+    isMagic: boolean
+    isEncore: boolean
+    atype: ATime
+
+    constructor() {
+        this.type = "cristal"
+        this.nameja = "クリヒ"
+        this.activeSkill = { cut: 0.5 }
+        this.isMagic = false
+        this.isEncore = false
+        this.atype = "eternal"
+    }
+
+    execute(): Ability {
+        const skillEffect = {
+            name: this.type,
+            nameja: this.nameja,
+            ...this.activeSkill,
+        }
+
+        const result: AbilityResponse = {
+            activateBuffs: [skillEffect],
+            applyBuff: skillEffect,
+        }
+
+        return {
+            type: this.type,
+            nameja: this.nameja,
+            executeType: this.type,
+            isMagic: false,
+            isEncoreTarget: false,
+            message: `${this.nameja}が発動しました`,
+            exec: (life: number) => result,
+        }
+    }
+}
+
 class Refrain implements ISkill {
     type: ISkillName
     nameja: string
@@ -249,7 +290,7 @@ class Magic implements ISkill {
         encoreAbility: MaybeAbility,
         magicSkillList: ISkill[]
     ): Ability {
-        let executeSkills = magicSkillList.filter((s) => !s.isMagic && s.type != "none")
+        let executeSkills = magicSkillList.filter((s) => !s.isMagic && s.type != "none" && s.type != "cristal")
 
         if (encoreAbility == null || encoreAbility.isMagic) {
             executeSkills = executeSkills.filter((s) => !s.isEncore)
@@ -322,10 +363,10 @@ export const SkillList: Record<ISkillName, ISkill> = {
     ssrguard: new Skill2("guard", "ダメガ", { guard: 1 }, "l"),
     guard: new Skill2("guard", "ダメガ", { guard: 1 }, "m"),
 
-    symfony: new Skill2("symfony", "シンフォ", { boost: 0.5, cover: 1 }, "m"),
+    symfony: new Skill2("symfony", "シンフォ", { boost: 0.5, boost2: 0.2, cover: 1 }, "m"),
     ensemble: new Skill2("ensemble", "アンサン", { boost: 0.5 }, "m"),
-    boost: new Skill2("boost", "スキブ", { boost: 0.2, cover: 1 }, "l"),
-    srboost: new Skill2("srboost", "SRスキブ", { boost: 0.1, cover: 1 }, "m"),
+    boost: new Skill2("boost", "スキブ", { boost: 0.2, boost2: 0.2, cover: 1 }, "l"),
+    srboost: new Skill2("srboost", "SRスキブ", { boost: 0.1, boost2: 0.1, cover: 1 }, "m"),
 
     motif: new Skill2("motif", "モチーフ", { score: 18 }, "m"),
 
@@ -341,6 +382,8 @@ export const SkillList: Record<ISkillName, ISkill> = {
 
     alternate: new Alternate(),
     mutual: new Mutual(),
+
+    cristal: new Cristal(),
 
     none: new Skill2("none", "なし", {}, "m"),
 }

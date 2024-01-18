@@ -10,6 +10,7 @@ export class Idol {
     secper: string
     type: ISkillName
     atime: number
+    isEternal: boolean = false
     skill: ISkill
 
     constructor(data: IdolProfile) {
@@ -25,6 +26,7 @@ export class Idol {
         this.per = data[3]
         this.secper = data[2] + data[3]
         this.type = type
+        this.isEternal = skill.atype == "eternal"
 
         if (this.secper in atimes[skill.atype]) {
             this.atime = atimes[skill.atype][this.secper]

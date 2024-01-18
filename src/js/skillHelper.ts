@@ -32,36 +32,30 @@ export class SkillHelper {
     static boost(skill: MaybeSkillEffect, boostEffect: BoostEffect): MaybeSkillEffect {
         if (skill == null) return null
 
-        if(skill.guard ?? 0 > 0){
-            console.log(skill)
-        }
-
         const boost = 1 + boostEffect.boost
+        const boost2 = 1 + boostEffect.boost2
         let r = {
             name: skill.name,
             nameja: skill.nameja,
             score: skill.score == null ? 0
-                   : skill.score < 0 ? skill.score
-                   : Math.ceil(skill.score * boost),
+                : skill.score < 0 ? skill.score
+                    : Math.ceil(skill.score * boost),
             combo: skill.combo == null ? 0
                 : skill.combo < 0 ? skill.combo
-                : Math.ceil(skill.combo * boost),
+                    : Math.ceil(skill.combo * boost),
             slide: skill.slide == null ? 0
                 : skill.slide < 0 ? skill.slide
-                : Math.ceil(skill.slide * boost),
+                    : Math.ceil(skill.slide * boost),
             heal:
                 Math.max(
-                    Math.ceil((skill.heal ?? 0) * boost),
+                    Math.ceil((skill.heal ?? 0) * boost2),
                     (skill.guard ?? 0) >= 1 ? boostEffect.cover : 0
                 ),
             support: skill.support ? skill.support + boostEffect.cover : 0,
             guard: skill.guard ?? 0,
             boost: skill.boost ?? 0,
             cover: skill.cover ?? 0,
-        }
-
-        if(skill.guard ?? 0 > 0){
-            console.log(r)
+            cut: skill.cut == null ? 0 : skill.cut * boost2
         }
 
         return r
@@ -75,8 +69,10 @@ export class SkillHelper {
             heal: SkillHelper.max(skills, "heal"),
             guard: SkillHelper.max(skills, "guard"),
             boost: SkillHelper.max(skills, "boost"),
+            boost2: SkillHelper.max(skills, "boost2"),
             slide: SkillHelper.max(skills, "slide"),
             cover: SkillHelper.max(skills, "cover"),
+            cut: SkillHelper.max(skills, "cut")
         }
     }
 
@@ -92,6 +88,7 @@ export class SkillHelper {
             slide: SkillHelper.sum(skills, "slide"),
             boost: SkillHelper.sum(skills, "boost"),
             cover: SkillHelper.sum(skills, "cover"),
+            cut: SkillHelper.sum(skills, "cut")
         }
     }
 
@@ -99,11 +96,13 @@ export class SkillHelper {
         if (isRezo) {
             return {
                 boost: SkillHelper.sum(skills, "boost"),
+                boost2: SkillHelper.sum(skills, "boost2"),
                 cover: SkillHelper.sum(skills, "cover"),
             }
         } else {
             return {
                 boost: SkillHelper.max(skills, "boost"),
+                boost2: SkillHelper.max(skills, "boost2"),
                 cover: SkillHelper.max(skills, "cover"),
             }
         }
@@ -113,9 +112,9 @@ export class SkillHelper {
         return (life: number) => {
             const allBuffs = abilities.map((s) => (s != null ? s.exec(life).applyBuff : null))
 
-            for(const buff of allBuffs){
+            for (const buff of allBuffs) {
                 if (!buff) continue
-                if (buff.slide == null || buff.slide < (buff.score ?? 0)){
+                if (buff.slide == null || buff.slide < (buff.score ?? 0)) {
                     buff.slide = buff.score
                 }
             }
@@ -139,7 +138,8 @@ export class SkillHelper {
 
             let skills = skillGroups.flat()
 
-            return SkillHelper.calcmax(skills)
+            const s = SkillHelper.calcmax(skills)
+            return s
         }
     }
 }
