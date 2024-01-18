@@ -1,109 +1,24 @@
 import { Unit, Matrix, CalcRequest } from "./houchi"
-import { keyof } from "./data/data"
 import { LIFE_DEFAULT, MUSIC_MAXTIME, CONF, DECREASE_LIFE } from "./data/constants"
 
-class Score {
-    notes: INoteDetail[]
-    offset: number
-    longInfo: { [key: number]: LongInfo }
+const getLiveType = (difficulity: IDifficult): ILiveType => {
+    switch (difficulity) {
+        case "piano":
+        case "forte":
+            return "grand"
 
-    constructor(notes: INote[], offset: number) {
-        this.notes = notes.map(x => {
-            return {
-                ...x,
-                score: 0,
-                result: "miss"
-            }
-        })
-        this.offset = offset
-        this.longInfo = {}
-        this.setlongInfo()
-        this.reset()
-    }
+        case "debut":
+        case "regular":
+        case "pro":
+        case "master":
+        case "master+":
+        case "witch":
+            return "normal"
+            break
 
-    setlongInfo() {
-        let keys = this.notes.map((n) => n.no)
-        keys = Array.from(new Set(keys)).filter((x) => x != 0)
-        for (let key of keys) {
-            let frames = this.notes.filter((n) => n.no == key).map((n) => n.frame)
-            let begin = Math.min(...frames)
-            let end = Math.max(...frames)
-            this.longInfo[key] = {
-                begin: begin,
-                end: end,
-                isContinue: true,
-            }
-        }
-    }
-
-    /**
-     * 指定したmomentにあるノーツをmiss扱いにし、つながっているノーツを無効にする
-     * ライフ計算のため、missになった最初のノーツを返す。
-     * @param moment
-     * @returns
-     */
-    disConnectLong(moment: number) {
-        let frame = moment * 30 - this.offset
-        let result: INote[] = []
-
-        for (let k of keyof(this.longInfo)) {
-            let li = this.longInfo[k]
-            if (!li.isContinue) continue
-            if (li.begin <= frame && frame <= li.end) {
-                li.isContinue = false
-                let notes = this.notes
-                    .filter((n) => n.no == k && n.frame >= frame)
-                    .sort((a, b) => a.frame - b.frame)
-                result.push(notes[0])
-            }
-        }
-        return result
-    }
-
-    isContinue(no: number) {
-        if (no == 0) return true
-        return this.longInfo[no].isContinue
-    }
-
-    disConnect(no: number) {
-        if (no == 0) return false
-        this.longInfo[no].isContinue = false
-    }
-
-    reset() {
-        this.notes.forEach((n) => {
-            n.score = 0
-            n.result = "guard"
-        })
-        for (let k in this.longInfo) {
-            this.longInfo[k].isContinue = true
-        }
-    }
-
-    setOffset(offset: number) {
-        this.offset = offset
-    }
-
-    get length() {
-        return this.notes.length
-    }
-
-    get longlength() {
-        return Math.max(...this.notes.map((n) => n.no))
-    }
-
-    get totalScore() {
-        return this.notes.reduce((a, c) => a + c.score!, 0)
-    }
-
-    get perfectnum() {
-        return this.notes.filter((n) => n.score).length
-    }
-
-    pick(moment: number) {
-        return this.notes.filter(
-            (n) => n.frame >= moment * 30 - this.offset && n.frame < moment * 30 + 30 - this.offset
-        )
+        default:
+            console.warn(`デ譜面難易度が不正です(${difficulity})`)
+            return "normal"
     }
 }
 
@@ -115,54 +30,51 @@ class Music {
     liveType: ILiveType
     decreaseLife: DecreaseLife
     musictime: number
+    notes: INoteDetail[]
+    offset: number
+    longInfo: Map<Number, LongInfo>
 
-    constructor() {
-        this.name = "hoge"
-        this.level = 28
-        this.coefficient = 2
-        this.difficulity = "master"
-        this.liveType = "normal"
-        this.musictime = 121
-        this.decreaseLife = DECREASE_LIFE.normal
-    }
+    constructor(data: Partial<IMusic>) {
+        this.name = data.name ?? ""
+        this.level = data.level ?? 28
+        this.difficulity = data.difficulity ?? "master"
+        this.musictime = data.musictime ?? 120
+        this.notes = data.notes?.map(n => { return { ...n, score: 0, result: "guard" } }) ?? []
+        this.offset = data.offset ?? 0
+        this.longInfo = new Map()
+        this.initLongInfo()
 
-    set(name: string, level: number, difficulity: IDifficult) {
-        this.name = name
-        this.level = level
-        this.difficulity = difficulity
-
-        switch (difficulity) {
-            case "piano":
-            case "forte":
-                this.liveType = "grand"
-                break
-
-            case "pro":
-            case "master":
-            case "master+":
-            case "witch":
-                this.liveType = "normal"
-                break
-
-            default:
-                console.warn("difficulityが不正です")
-        }
-
-        this.calcParam()
-    }
-
-    calcParam() {
-        if (this.level in CONF) {
-            this.coefficient = CONF[this.level]
-        }
+        this.liveType = getLiveType(this.difficulity)
         this.decreaseLife = DECREASE_LIFE[this.liveType]
+        this.coefficient = CONF[this.level] || 2
     }
 
-    setMusictime(time: number) {
-        this.musictime = time
+
+    initLongInfo() {
+        let noList = this.notes.map((n) => n.no)
+        noList = [...new Set(noList)].filter((x) => x != 0)
+        for (let no of noList) {
+            let frames = this.notes.filter((n) => n.no == no).map((n) => n.frame)
+            this.longInfo.set(no, {
+                begin: Math.min(...frames),
+                end: Math.max(...frames),
+                isContinue: true,
+            })
+        }
     }
 
-    notesLife(note: INote) {
+
+    resetNotes() {
+        this.notes.forEach((n) => {
+            n.score = 0
+            n.result = "guard"
+        })
+        for (let [k, info] of this.longInfo) {
+            info.isContinue = true
+        }
+    }
+
+    getLifeOfNote(note: INote) {
         let result
         switch (this.liveType) {
             case "grand":
@@ -182,6 +94,62 @@ class Music {
             console.warn("ライフが取得できません", note.type)
         }
         return result
+    }
+
+    frame(moment: number) {
+        return moment * 30 - this.offset
+    }
+
+    /**
+ * 指定したmomentにあるノーツをmiss扱いにし、つながっているノーツを無効にする
+ * ライフ計算のため、missになった最初のノーツを返す。
+ * @param moment
+ * @returns
+ */
+    disConnectLong(moment: number) {
+        let frame = this.frame(moment)
+        let result: INote[] = []
+
+        for (let [key, info] of this.longInfo) {
+            if (!info.isContinue) continue
+            if (info.begin <= frame && frame <= info.end) {
+                info.isContinue = false
+                let notes = this.notes
+                    .filter((n) => n.no == key && n.frame >= frame)
+                    .sort((a, b) => a.frame - b.frame)
+                result.push(notes[0])
+            }
+        }
+        return result
+    }
+
+    isContinue(no: number) {
+        if (no == 0) return true
+        return this.longInfo.get(no)!.isContinue
+    }
+
+    disConnect(no: number) {
+        if (no == 0) return;
+        this.longInfo.get(no)!.isContinue = false
+    }
+
+
+    get notesCount() {
+        return this.notes.length
+    }
+
+    get totalScore() {
+        return this.notes.reduce((a, c) => a + c.score!, 0)
+    }
+
+    get perfectnum() {
+        return this.notes.filter((n) => n.score).length
+    }
+
+    pickNotesByMoment(moment: number) {
+        return this.notes.filter(
+            (n) => n.frame >= this.frame(moment) && n.frame < this.frame(moment + 1)
+        )
     }
 }
 
@@ -210,7 +178,6 @@ type JudgeResponse = {
 
 export class Simulator {
     unit: Unit
-    notes: Score
     isGrand: boolean
     music: Music
     isHouchi: boolean
@@ -218,9 +185,8 @@ export class Simulator {
 
     constructor(unit: Unit, isGrand: boolean, isHouchi = true) {
         this.unit = unit
-        this.notes = new Score([], 0)
         this.isGrand = isGrand
-        this.music = new Music()
+        this.music = new Music({})
         this.isHouchi = isHouchi
         this.cache = new Map<string, IMusic>()
     }
@@ -235,38 +201,20 @@ export class Simulator {
             this.cache.set(filename, score)
         }
 
+        this.music = new Music(score)
 
-        this.notes = new Score(score.notes, score.offset)
-        this.music.set(score.name, score.level, score.difficulity)
-        this.music.setMusictime(score.musictime)
-    }
-
-    get totalScore() {
-        return this.notes.totalScore
-    }
-
-    get perfectnum() {
-        return this.notes.perfectnum
-    }
-
-    setOffset(offset: number) {
-        this.notes.setOffset(offset)
-    }
-
-    setMusictime(time: number) {
-        this.music.setMusictime(time)
     }
 
     reset() {
-        this.notes.reset()
+        this.music.resetNotes()
     }
 
     basicValue(appeal: number) {
-        return (appeal * this.music.coefficient) / this.notes.length
+        return (appeal * this.music.coefficient) / this.music.notesCount
     }
 
     combobonus(combo: number) {
-        let allnote = this.notes.length
+        let allnote = this.music.notesCount
         if (combo >= Math.floor(allnote * 0.9)) return 2.0
         if (combo >= Math.floor(allnote * 0.8)) return 1.7
         if (combo >= Math.floor(allnote * 0.7)) return 1.5
@@ -335,7 +283,7 @@ export class Simulator {
                 finallyBuff: skill,
                 judge,
                 life: 0,
-                notes: this.notes.pick(moment)
+                notes: this.music.pickNotesByMoment(moment)
             })
 
 
@@ -350,7 +298,7 @@ export class Simulator {
         return {
             momentInfos,
             musicName: this.music.name,
-            totalScore: this.totalScore,
+            totalScore: this.music.totalScore,
             unitLife: lifeResponse.requiredLife,
             dangerTime: dangerMoment / 2,
             maxCombo: Math.max(...combos, 0)
@@ -406,9 +354,9 @@ export class Simulator {
         let life = 0
         let combo = nowcombo
 
-        let notes = this.notes.pick(moment)
+        let notes = this.music.pickNotesByMoment(moment)
         for (let n of notes) {
-            if (!this.notes.isContinue(n.no)) {
+            if (!this.music.isContinue(n.no)) {
                 n.result = "gone"
                 continue
             }
@@ -430,9 +378,9 @@ export class Simulator {
 
     disConnectLong(moment: number) {
         let life = 0
-        let notes = this.notes.disConnectLong(moment)
+        let notes = this.music.disConnectLong(moment)
         for (let n of notes) {
-            life -= this.music.notesLife(n)!
+            life -= this.music.getLifeOfNote(n)!
         }
         return life
     }
@@ -441,15 +389,15 @@ export class Simulator {
         let life = this.disConnectLong(moment)
         let isReset = life < 0
 
-        let notes = this.notes.pick(moment)
+        let notes = this.music.pickNotesByMoment(moment)
         for (let n of notes) {
-            if (!this.notes.isContinue(n.no)) {
+            if (!this.music.isContinue(n.no)) {
                 n.result = "gone"
                 continue
             }
             n.result = "guard"
             isReset = true
-            this.notes.disConnect(n.no)
+            this.music.disConnect(n.no)
         }
         return {
             addLife: 0,
@@ -463,17 +411,17 @@ export class Simulator {
         let life = this.disConnectLong(moment)
         let isReset = life < 0
 
-        let notes = this.notes.pick(moment)
+        let notes = this.music.pickNotesByMoment(moment)
 
         for (let n of notes) {
-            if (!this.notes.isContinue(n.no)) {
+            if (!this.music.isContinue(n.no)) {
                 n.result = "gone"
                 continue
             }
             n.result = "miss"
-            this.notes.disConnect(n.no)
+            this.music.disConnect(n.no)
 
-            let l = this.music.notesLife(n)!
+            let l = this.music.getLifeOfNote(n)!
             life -= l
         }
         return {
