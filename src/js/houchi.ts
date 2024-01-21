@@ -23,7 +23,7 @@ export type CalcRequest = {
     idols: Idol[],
     isGuestRezo: boolean,
     appeal: number,
-    scorePath: string
+    scorePath: string,
 }
 export type CalcResponse = {
     momentInfo: CalcMomentInfo[]
@@ -82,7 +82,7 @@ export class Unit {
 
                 const position = this.isGrand ? `${["A", "B", "C"][unitno]}${no % 5 + 1}` : `${no + 1}`
 
-                let isActiveTiming = idol.isActiveTiming(time, unitno, this.simulator.music.musictime, this.isGrand)
+                let isActiveTiming = idol.isActiveTiming(time, unitno, this.simulator.music.musictime, this.isGrand) || idol.isEternal
 
                 if (isActiveTiming && idol.skill.type != "none") {
                     let skills = idols

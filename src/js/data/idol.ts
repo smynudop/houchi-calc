@@ -162,6 +162,10 @@ export const cards: { [k: string]: readonly IdolProfile[] } = {
         ["マジック12中pa3", "pa", 12, "中", "magic"],
     ],
 
+    クリスタル: [
+        ["クリスタルイヴ", "pa", 1, "高", "cristal"],
+    ],
+
     スコア系: [
         ["コンセ7高cu", "cu", 7, "高", "concent"],
         ["コンセ7高co", "co", 7, "高", "concent"],

@@ -265,7 +265,7 @@ export class Simulator {
                     jres = this.guard(moment)
                     break
                 case "miss":
-                    jres = this.miss(moment)
+                    jres = this.miss(moment, skill)
                     break
             }
             addLifes.push(jres.addLife)
@@ -289,7 +289,7 @@ export class Simulator {
 
         }
 
-        const lifeResponse = this.calcLife(addLifes)
+        const lifeResponse = this.calcLife(addLifes, req.idols.some(i => i.type == "cristal"))
         for (const [i, info] of momentInfos.entries()) {
             info.life = lifeResponse.percentList[i]
         }
@@ -308,12 +308,12 @@ export class Simulator {
 
     }
 
-    calcLife(lifes: number[]) {
+    calcLife(lifes: number[], start200: boolean) {
 
-        const requiredLife = this.getRequiredLife(lifes)
+        const requiredLife = this.getRequiredLife(lifes, start200)
         const unitlife = Math.max(requiredLife, LIFE_DEFAULT)
 
-        let simuLife = unitlife
+        let simuLife = start200 ? unitlife * 2 : unitlife
 
         let percentList: number[] = []
 
@@ -334,14 +334,22 @@ export class Simulator {
         }
     }
 
-    getRequiredLife(lifes: number[]) {
+    getRequiredLife(lifes: number[], start200: boolean) {
         let lifeSimu: number[] = []
         let life = 0
         for (let l of lifes) {
             life -= l
             lifeSimu.push(life)
         }
-        return Math.max(...lifeSimu) + 1
+        if (start200) {
+            console.log(lifeSimu)
+            const max = Math.max(...lifeSimu) - Math.min(...lifeSimu)
+            return Math.floor(max / 2) + 1
+        } else {
+            const max = Math.max(...lifeSimu)
+            return max + 1
+        }
+
     }
 
     perfect(moment: number, bonus: RequiredBuff, nowcombo: number, appeal: number): JudgeResponse {
@@ -407,7 +415,7 @@ export class Simulator {
         }
     }
 
-    miss(moment: number): JudgeResponse {
+    miss(moment: number, bonus: RequiredBuff): JudgeResponse {
         let life = this.disConnectLong(moment)
         let isReset = life < 0
 
@@ -422,6 +430,7 @@ export class Simulator {
             this.music.disConnect(n.no)
 
             let l = this.music.getLifeOfNote(n)!
+            l = Math.floor(l * (1 - bonus.cut))
             life -= l
         }
         return {

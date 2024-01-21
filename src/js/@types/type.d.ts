@@ -1,10 +1,10 @@
 type Judge = "perfect" | "gone" | "guard" | "miss"
 type IAttr = "cu" | "co" | "pa"
-type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp"
+type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp" | "eternal"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"
 type ILiveType = "normal" | "grand"
 type INoteType = "tap" | "flick_left" | "flick_right" | "flick" | "long" | "slide"
-type ISkillFrame = "score" | "combo" | "slide" | "heal" | "support" | "guard" | "boost" | "cover"
+type ISkillFrame = "score" | "combo" | "slide" | "heal" | "support" | "guard" | "boost" | "boost2" | "cover" | "cut"
 
 const skillNameList = [
     "support",
@@ -37,6 +37,7 @@ const skillNameList = [
     "mutual",
 
     "magic",
+    "cristal",
 
     "none",
 ] as const
@@ -60,6 +61,7 @@ type IdolProfile = readonly [string, IAttr, number, string, ISkillName]
 
 type BoostEffect = {
     boost: number
+    boost2: number
     cover: number
 }
 
@@ -82,7 +84,7 @@ type ISkill = {
     type: ISkillName
     nameja: string
     activeSkill: Buff
-    isMagic: boolean
+    canNOTmagicExecute?: boolean
     isEncore: boolean
     atype: ATime
     execute(applyBuffList: Buff[], encoreAbility: MaybeAbility, magicSkillList: ISkill[]): Ability

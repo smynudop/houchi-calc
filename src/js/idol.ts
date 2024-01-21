@@ -11,6 +11,7 @@ export class Idol {
     type: ISkillName
     atime: number
     skill: ISkill
+    isEternal: boolean = false
 
     constructor(data: IdolProfile) {
         let type = data[4]
@@ -33,6 +34,7 @@ export class Idol {
             this.atime = 0
         }
         this.skill = skill
+        this.isEternal = skill.atype == "eternal"
     }
 
     copy() {

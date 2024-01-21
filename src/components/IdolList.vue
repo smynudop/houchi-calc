@@ -156,7 +156,7 @@ $bgColor: rgb(227, 229, 233);
     background-color: rgba($bgColor, 1);
 }
 
-@media screen and(max-width: 750px) {
+@media screen and (max-width: 750px) {
     #idollist {
         width: 100%;
         //height: calc(100dvh - 10px);

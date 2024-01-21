@@ -41,6 +41,21 @@ class Skill2 implements ISkill {
     }
 }
 
+class Cristal extends Skill2 {
+    canNOTmagicExecute?: boolean | undefined = true
+    constructor() {
+        super("cristal", "クリヒ", { cut: 0.5 }, "eternal")
+    }
+
+    override execute(): Ability {
+        const ab = super.execute()
+        return {
+            ...ab,
+            isEncoreTarget: false,
+        }
+    }
+}
+
 class Refrain implements ISkill {
     type: ISkillName
     nameja: string
@@ -234,6 +249,7 @@ class Magic implements ISkill {
     isMagic: boolean
     isEncore: boolean
     atype: ATime
+    canNOTmagicExecute?: boolean | undefined = true
 
     constructor() {
         this.type = "magic"
@@ -249,7 +265,7 @@ class Magic implements ISkill {
         encoreAbility: MaybeAbility,
         magicSkillList: ISkill[]
     ): Ability {
-        let executeSkills = magicSkillList.filter((s) => !s.isMagic && s.type != "none")
+        let executeSkills = magicSkillList.filter((s) => !s.canNOTmagicExecute && s.type != "none")
 
         if (encoreAbility == null || encoreAbility.isMagic) {
             executeSkills = executeSkills.filter((s) => !s.isEncore)
@@ -322,10 +338,10 @@ export const SkillList: Record<ISkillName, ISkill> = {
     ssrguard: new Skill2("guard", "ダメガ", { guard: 1 }, "l"),
     guard: new Skill2("guard", "ダメガ", { guard: 1 }, "m"),
 
-    symfony: new Skill2("symfony", "シンフォ", { boost: 0.5, cover: 1 }, "m"),
+    symfony: new Skill2("symfony", "シンフォ", { boost: 0.5, boost2: 0.2, cover: 1 }, "m"),
     ensemble: new Skill2("ensemble", "アンサン", { boost: 0.5 }, "m"),
-    boost: new Skill2("boost", "スキブ", { boost: 0.2, cover: 1 }, "l"),
-    srboost: new Skill2("srboost", "SRスキブ", { boost: 0.1, cover: 1 }, "m"),
+    boost: new Skill2("boost", "スキブ", { boost: 0.2, boost2: 0.2, cover: 1 }, "l"),
+    srboost: new Skill2("srboost", "SRスキブ", { boost: 0.1, boost2: 0.1, cover: 1 }, "m"),
 
     motif: new Skill2("motif", "モチーフ", { score: 18 }, "m"),
 
@@ -341,6 +357,8 @@ export const SkillList: Record<ISkillName, ISkill> = {
 
     alternate: new Alternate(),
     mutual: new Mutual(),
+
+    cristal: new Cristal(),
 
     none: new Skill2("none", "なし", {}, "m"),
 }
