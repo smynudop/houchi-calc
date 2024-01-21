@@ -251,8 +251,6 @@ export class Simulator {
             } else {
                 if (skill.support >= 4) {
                     judge = "perfect"
-                } else if (skill.guard > 0) {
-                    judge = "guard"
                 }
             }
 
@@ -261,9 +259,9 @@ export class Simulator {
                 case "perfect":
                     jres = this.perfect(moment, skill, combo, req.appeal)
                     break
-                case "guard":
-                    jres = this.guard(moment)
-                    break
+                // case "guard":
+                //     jres = this.guard(moment)
+                //     break
                 case "miss":
                     jres = this.miss(moment, skill)
                     break
@@ -430,7 +428,8 @@ export class Simulator {
             this.music.disConnect(n.no)
 
             let l = this.music.getLifeOfNote(n)!
-            l = Math.floor(l * (1 - bonus.cut))
+            const cut = Math.min(bonus.cut, 1)
+            l = Math.floor(l * (1 - cut))
             life -= l
         }
         return {

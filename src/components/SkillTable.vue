@@ -39,7 +39,7 @@ const selectFrame = (frame: number) => {
             </tr>
 
             <tr v-for="info in momentInfo" class="timeline">
-                <td v-for="skill in info.skillList" :class="skill?.type">
+                <td v-for="skill in info.skillList" :class="skill?.executeType">
                 </td>
                 <td class="life" :class="'lifeper-' + info.life"></td>
                 <td class="lifestate" :class="{ 'danger': info.judge == 'miss' }"></td>

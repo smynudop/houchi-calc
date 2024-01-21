@@ -1,28 +1,31 @@
 export class SkillHelper {
     static max(skills: (Buff | null)[], frame: keyof Buff): number {
-        let result = 0
+        let result = -9999
         for (let skill of skills) {
             if (skill == null) continue
-            const value = skill[frame] ?? 0
+            const value = skill[frame]
+            if (value == null || value == 0) continue
             result = Math.max(result, value)
         }
+        if (result == -9999) result = 0
         return result
     }
 
     static sum(skills: (SkillEffect | null)[], frame: keyof Buff): number {
         let skills2 = skills.filter((s): s is SkillEffect => s != null)
 
-        let result = 0
-        let magicSkill = {
+        //マジックが複数ある場合はマジック内で最大のものを採用
+        let magicSkill: SkillEffect = {
             name: "magic",
             nameja: "マジック統合",
             [frame]: SkillHelper.max(
                 skills2.filter((s) => s.name == "magic"),
                 frame
             ),
-        } as SkillEffect
+        }
         skills2 = skills2.filter((s) => s.name != "magic").concat(magicSkill)
 
+        let result = 0
         for (let skill of skills2) {
             result += skill[frame] ?? 0
         }
@@ -50,10 +53,9 @@ export class SkillHelper {
             heal:
                 Math.max(
                     Math.ceil((skill.heal ?? 0) * boost2),
-                    (skill.guard ?? 0) >= 1 ? boostEffect.cover : 0
+                    skill.heal2 != null ? skill.heal2 + boostEffect.cover : 0
                 ),
             support: skill.support ? skill.support + boostEffect.cover : 0,
-            guard: skill.guard ?? 0,
             boost: skill.boost ?? 0,
             cover: skill.cover ?? 0,
             cut: skill.cut == null ? 0 : skill.cut * boost2
@@ -68,7 +70,7 @@ export class SkillHelper {
             score: SkillHelper.max(skills, "score"),
             combo: SkillHelper.max(skills, "combo"),
             heal: SkillHelper.max(skills, "heal"),
-            guard: SkillHelper.max(skills, "guard"),
+            heal2: SkillHelper.max(skills, "heal2"),
             boost: SkillHelper.max(skills, "boost"),
             boost2: SkillHelper.max(skills, "boost2"),
             slide: SkillHelper.max(skills, "slide"),
@@ -85,10 +87,11 @@ export class SkillHelper {
             score: SkillHelper.sum(skills, "score"),
             combo: SkillHelper.sum(skills, "combo"),
             heal: SkillHelper.sum(skills, "heal"),
-            guard: SkillHelper.sum(skills, "guard"),
+            heal2: SkillHelper.max(skills, "heal2"),
             slide: SkillHelper.sum(skills, "slide"),
             boost: SkillHelper.sum(skills, "boost"),
             cover: SkillHelper.sum(skills, "cover"),
+            cut: SkillHelper.sum(skills, "cut")
         }
     }
 
@@ -103,7 +106,7 @@ export class SkillHelper {
         } else {
             return {
                 boost: SkillHelper.max(skills, "boost"),
-                boost2: SkillHelper.sum(skills, "boost2"),
+                boost2: SkillHelper.max(skills, "boost2"),
                 cover: SkillHelper.max(skills, "cover"),
             }
         }
@@ -111,7 +114,7 @@ export class SkillHelper {
 
     static calc(abilities: (Ability | null)[], isRezo: boolean[]): FinallyAbility {
         return (life: number) => {
-            const allBuffs = abilities.map((s) => (s != null ? s.exec(life).applyBuff : null))
+            const allBuffs = abilities.map((s) => (s?.exec(life).applyBuff ?? null))
 
             for (const buff of allBuffs) {
                 if (!buff) continue

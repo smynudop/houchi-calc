@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import vue from "@vitejs/plugin-vue"
 
@@ -20,5 +21,8 @@ export default defineConfig({
                 gachi_grand: "./src/gachi_grand.html"
             }
         }
+    },
+    test: {
+        include: ['test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']
     }
 })

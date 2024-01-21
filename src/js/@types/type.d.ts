@@ -4,7 +4,7 @@ type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp" | "eternal"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"
 type ILiveType = "normal" | "grand"
 type INoteType = "tap" | "flick_left" | "flick_right" | "flick" | "long" | "slide"
-type ISkillFrame = "score" | "combo" | "slide" | "heal" | "support" | "guard" | "boost" | "boost2" | "cover" | "cut"
+type ISkillFrame = "score" | "combo" | "slide" | "heal" | "heal2" | "support" | "boost" | "boost2" | "cover" | "cut"
 
 const skillNameList = [
     "support",
@@ -96,7 +96,7 @@ type Ability = {
     executeType: ISkillName
     isMagic: boolean
     isEncoreTarget: boolean
-    message: string
+    message: string | null
     exec: (life: number) => AbilityResponse
 }
 type MaybeAbility = Ability | null

@@ -96,7 +96,9 @@ export class Unit {
                         applyResutLogList.push(time, no, ability)
                     }
 
-                    logs.push(`${time}s: [${position}] ${ability.message}`)
+                    if (ability.message) {
+                        logs.push(`${time}s: [${position}] ${ability.message}`)
+                    }
 
                     let response = ability.exec(0)
                     activateSkillList = activateSkillList.concat(response.activateBuffs)
