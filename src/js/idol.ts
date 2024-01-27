@@ -65,7 +65,20 @@ export class Idol {
         return this.type == "motif"
     }
 
+    /**
+     * 起動タイミングかどうか
+     * @param sec 
+     * @param unitno 
+     * @param musictime 
+     * @param isGrand 
+     * @returns 
+     */
     isActiveTiming(sec: number, unitno: number, musictime: number, isGrand: boolean) {
+        if (this.isEternal) {
+            return sec == 0
+        }
+
+
         let mod = [2, 1, 0][unitno]
 
         let isTiming = sec % this.interval == 0

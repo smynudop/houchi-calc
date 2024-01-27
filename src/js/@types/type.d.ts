@@ -87,24 +87,27 @@ type ISkill = {
     canNOTmagicExecute?: boolean
     isEncore: boolean
     atype: ATime
-    execute(applyBuffList: Buff[], encoreAbility: MaybeAbility, magicSkillList: ISkill[]): Ability
+    execute(props: SkillExecuteProp): Ability | null
 }
-
+type SkillExecuteProp = {
+    applyTargetAbilities: Ability[]
+    encoreAbility: Ability | null
+    magicSkillList: ISkill[]
+}
+type AbilityExecute = (life: number) => SkillEffect
 type Ability = {
     type: ISkillName
     nameja: string
     executeType: ISkillName
     isMagic: boolean
     isEncoreTarget: boolean
+    isApplyTarget: boolean
     message: string | null
-    exec: (life: number) => AbilityResponse
+    exec: AbilityExecute
+    childAbilities?: Ability[]
 }
 type MaybeAbility = Ability | null
 
-type AbilityResponse = {
-    applyBuff: SkillEffect | null
-    activateBuffs: SkillEffect[]
-}
 
 type FinallyAbility = (life: number) => RequiredBuff
 

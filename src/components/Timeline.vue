@@ -34,7 +34,7 @@ const scroll = (e: WheelEvent) => {
 const isDanger = (buff: RequiredBuff | null) => {
     if (!buff) return true
 
-    if (buff.guard >= 1 || buff.support >= 4) {
+    if (buff.cut >= 1 || buff.support >= 4) {
         return false
     } else {
         return true

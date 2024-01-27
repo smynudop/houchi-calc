@@ -1,6 +1,6 @@
 import { SkillHelper } from "./skillHelper"
 
-class Skill2 implements ISkill {
+class Skill implements ISkill {
     type: ISkillName
     nameja: string
     activeSkill: Buff
@@ -17,17 +17,13 @@ class Skill2 implements ISkill {
         this.atype = atype
     }
 
-    execute(): Ability {
+    execute(): Ability | null {
         const skillEffect: SkillEffect = {
             name: this.type,
             nameja: this.nameja,
             ...this.activeSkill,
         }
 
-        const result: AbilityResponse = {
-            activateBuffs: [skillEffect],
-            applyBuff: skillEffect,
-        }
 
         return {
             type: this.type,
@@ -35,23 +31,36 @@ class Skill2 implements ISkill {
             executeType: this.type,
             isMagic: false,
             isEncoreTarget: true,
+            isApplyTarget: true,
             message: `${this.nameja}が発動しました`,
-            exec: (life: number) => result,
+            exec: (life: number) => skillEffect,
         }
     }
 }
 
-class Cristal extends Skill2 {
+class DummySkill extends Skill {
+    constructor() {
+        super("none", "なし", {}, "m")
+    }
+
+    execute(): Ability | null {
+        return null
+    }
+}
+
+class Cristal extends Skill {
     canNOTmagicExecute?: boolean | undefined = true
     constructor() {
         super("cristal", "クリヒ", { cut: 0.5 }, "eternal")
     }
 
-    override execute(): Ability {
+    override execute(): Ability | null {
         const ab = super.execute()
+        if (!ab) return null
         return {
             ...ab,
             isEncoreTarget: false,
+            isApplyTarget: false,
             message: null
         }
     }
@@ -74,18 +83,16 @@ class Refrain implements ISkill {
         this.atype = "m"
     }
 
-    execute(applyBuffList: Buff[]): Ability {
-        const skillEffect = {
-            name: this.type,
-            nameja: this.nameja,
-            score: SkillHelper.max(applyBuffList, "score"),
-            slide: SkillHelper.max(applyBuffList, "slide"),
-            combo: SkillHelper.max(applyBuffList, "combo"),
-        }
-
-        const result: AbilityResponse = {
-            activateBuffs: [],
-            applyBuff: skillEffect,
+    execute({ applyTargetAbilities }: SkillExecuteProp): Ability {
+        const exec: AbilityExecute = (life: number) => {
+            const applyBuffList = applyTargetAbilities.map(a => a.exec(life))
+            return {
+                name: this.type,
+                nameja: this.nameja,
+                score: SkillHelper.max(applyBuffList, "score"),
+                slide: SkillHelper.max(applyBuffList, "slide"),
+                combo: SkillHelper.max(applyBuffList, "combo"),
+            }
         }
 
         return {
@@ -94,8 +101,9 @@ class Refrain implements ISkill {
             executeType: this.type,
             isMagic: false,
             isEncoreTarget: true,
-            message: `リフレインが発動しました。スコア${skillEffect.score}%, コンボ${skillEffect.combo}%`,
-            exec: (life: number) => result,
+            isApplyTarget: false,
+            message: `リフレインが発動しました。`,
+            exec,
         }
     }
 }
@@ -117,18 +125,16 @@ class Alternate implements ISkill {
         this.atype = "m"
     }
 
-    execute(applyBuffList: Buff[]): Ability {
-        const skillEffect = {
-            name: this.type,
-            nameja: this.nameja,
-            score: Math.ceil(SkillHelper.max(applyBuffList, "score") * 1.7),
-            slide: Math.ceil(SkillHelper.max(applyBuffList, "slide") * 1.7),
-            combo: -20,
-        }
-
-        const result: AbilityResponse = {
-            activateBuffs: [],
-            applyBuff: skillEffect,
+    execute({ applyTargetAbilities }: SkillExecuteProp): Ability {
+        const exec: AbilityExecute = (life: number) => {
+            const applyBuffList = applyTargetAbilities.map(a => a.exec(life))
+            return {
+                name: this.type,
+                nameja: this.nameja,
+                score: Math.ceil(SkillHelper.max(applyBuffList, "score") * 1.7),
+                slide: Math.ceil(SkillHelper.max(applyBuffList, "slide") * 1.7),
+                combo: -20,
+            }
         }
 
         return {
@@ -137,8 +143,9 @@ class Alternate implements ISkill {
             executeType: this.type,
             isMagic: false,
             isEncoreTarget: true,
-            message: `オルタネイトが発動しました。スコア${skillEffect.score}%/スライド${skillEffect.slide}%`,
-            exec: (life: number) => result,
+            isApplyTarget: false,
+            message: `オルタネイトが発動しました。`,
+            exec,
         }
     }
 }
@@ -160,17 +167,17 @@ class Mutual implements ISkill {
         this.atype = "m"
     }
 
-    execute(applyBuffList: Buff[]): Ability {
-        const skillEffect = {
-            name: this.type,
-            nameja: this.nameja,
-            score: -20,
-            combo: Math.ceil(SkillHelper.max(applyBuffList, "combo") * 1.7),
-        }
+    execute({ applyTargetAbilities }: SkillExecuteProp): Ability {
 
-        const result: AbilityResponse = {
-            activateBuffs: [],
-            applyBuff: skillEffect,
+        const exec: AbilityExecute = (life: number) => {
+            const applyBuffList = applyTargetAbilities.map(a => a.exec(life))
+
+            return {
+                name: this.type,
+                nameja: this.nameja,
+                score: -20,
+                combo: Math.ceil(SkillHelper.max(applyBuffList, "combo") * 1.7),
+            }
         }
 
         return {
@@ -179,8 +186,9 @@ class Mutual implements ISkill {
             executeType: this.type,
             isMagic: false,
             isEncoreTarget: true,
-            message: `ミューチャルが発動しました。コンボ${skillEffect.combo}%`,
-            exec: (life: number) => result,
+            isApplyTarget: false,
+            message: `ミューチャルが発動しました。`,
+            exec,
         }
     }
 }
@@ -202,42 +210,18 @@ class Encore implements ISkill {
         this.atype = "s"
     }
 
-    execute(applyBuffList: Buff[], encoreAbility: MaybeAbility, magicSkillList: ISkill[]): Ability {
+    execute({ encoreAbility }: SkillExecuteProp): Ability | null {
         if (encoreAbility == null) {
-            return {
-                type: this.type,
-                nameja: this.nameja,
-                executeType: "none",
-                isMagic: false,
-                isEncoreTarget: false,
-                message: "模倣対象がなかったため、アンコールは発動しません。",
-                exec: (life: number) => {
-                    return {
-                        isMagic: false,
-                        applyBuff: null,
-                        activateBuffs: [],
-                        isEncoreTarget: false,
-                    }
-                },
-            }
-        }
-
-        const exec = (life: number) => {
-            const result = encoreAbility.exec(life)
-            if (result.applyBuff != null) {
-                result.applyBuff.nameja = `アンコール(${result.applyBuff.nameja})`
-            }
-            return result
+            return null
         }
 
         return {
+            ...encoreAbility,
             type: this.type,
             nameja: `アンコール(${encoreAbility.nameja})`,
             executeType: encoreAbility.executeType,
             isMagic: false,
             isEncoreTarget: false,
-            message: `アンコールは${encoreAbility.nameja}を模倣しました。${encoreAbility.message}`,
-            exec: exec,
         }
     }
 }
@@ -261,57 +245,16 @@ class Magic implements ISkill {
         this.atype = "sp"
     }
 
-    execute(
-        applyTargetList: Buff[],
-        encoreAbility: MaybeAbility,
-        magicSkillList: ISkill[]
-    ): Ability {
-        let executeSkills = magicSkillList.filter((s) => !s.canNOTmagicExecute && s.type != "none")
+    execute(prop: SkillExecuteProp): Ability | null {
 
-        if (encoreAbility == null || encoreAbility.isMagic) {
-            executeSkills = executeSkills.filter((s) => !s.isEncore)
-        }
+        let executeSkills = prop.magicSkillList.filter((s) => !s.canNOTmagicExecute && s.type != "none")
 
-        if (executeSkills.length == 0) {
-            const exec = (life: number) => {
-                return {
-                    applyBuff: null,
-                    activateBuffs: [],
-                    isMagic: true,
-                    isEncoreTarget: false,
-                }
-            }
-            return {
-                type: "none",
-                nameja: "",
-                executeType: this.type,
-                isMagic: false,
-                isEncoreTarget: false,
-                message: "発動対象がなかったため、マジックは発動しません。",
-                exec: exec,
-            }
-        }
+        const abilities = executeSkills.map((s) => s.execute(prop))
+            .filter((a): a is Ability => a != null)
+            .filter(a => a.executeType != "magic")
 
-        const abilities = executeSkills.map((s) =>
-            s.execute(applyTargetList, encoreAbility, magicSkillList)
-        )
-
-        const exec = (life: number) => {
-            const responses = abilities.map((s) => s.exec(life))
-
-            const activateBuffs = responses.flatMap((s) => s.activateBuffs)
-            const applyBuff = {
-                name: this.type,
-                nameja: this.nameja,
-                ...SkillHelper.calcmax(responses.map((s) => s.applyBuff)),
-            }
-
-            return {
-                isMagic: true,
-                activateBuffs: activateBuffs,
-                applyBuff: applyBuff,
-                isEncoreTarget: true,
-            }
+        if (abilities.length) {
+            return null
         }
 
         const skillNames = abilities.map((s) => s.nameja).join("、")
@@ -323,34 +266,36 @@ class Magic implements ISkill {
             executeType: this.type,
             isMagic: true,
             isEncoreTarget: true,
+            isApplyTarget: false,
             message: `マジックは${skillNames}を発動しました。\n${messages}`,
-            exec: exec,
+            exec: (life: number) => { return { name: "magic", nameja: "マジック" } },
+            childAbilities: abilities
         }
     }
 }
 
 export const SkillList: Record<ISkillName, ISkill> = {
-    support: new Skill2("support", "サポート", { support: 3 }, "s"),
-    tuning: new Skill2("tuning", "チューン", { support: 2, combo: 12 }, "m"),
+    support: new Skill("support", "サポート", { support: 3 }, "s"),
+    tuning: new Skill("tuning", "チューン", { support: 2, combo: 12 }, "m"),
 
-    heal: new Skill2("heal", "回復", { heal: 3 }, "ms"),
-    synergy: new Skill2("synergy", "シナジー", { score: 16, combo: 15, heal: 1 }, "m"),
-    allround: new Skill2("allround", "オルラン", { combo: 13, heal: 1 }, "ms"),
-    ssrguard: new Skill2("guard", "ダメガ", { cut: 1 }, "l"),
-    guard: new Skill2("guard", "ダメガ", { cut: 1 }, "m"),
+    heal: new Skill("heal", "回復", { heal: 3 }, "ms"),
+    synergy: new Skill("synergy", "シナジー", { score: 16, combo: 15, heal: 1 }, "m"),
+    allround: new Skill("allround", "オルラン", { combo: 13, heal: 1 }, "ms"),
+    ssrguard: new Skill("guard", "ダメガ", { cut: 1 }, "l"),
+    guard: new Skill("guard", "ダメガ", { cut: 1 }, "m"),
 
-    symfony: new Skill2("symfony", "シンフォ", { boost: 0.5, boost2: 0.2, cover: 1 }, "m"),
-    ensemble: new Skill2("ensemble", "アンサン", { boost: 0.5 }, "m"),
-    boost: new Skill2("boost", "スキブ", { boost: 0.2, boost2: 0.2, cover: 1 }, "l"),
-    srboost: new Skill2("srboost", "SRスキブ", { boost: 0.1, boost2: 0.1, cover: 1 }, "m"),
+    symfony: new Skill("symfony", "シンフォ", { boost: 0.5, boost2: 0.2, cover: 1 }, "m"),
+    ensemble: new Skill("ensemble", "アンサン", { boost: 0.5 }, "m"),
+    boost: new Skill("boost", "スキブ", { boost: 0.2, boost2: 0.2, cover: 1 }, "l"),
+    srboost: new Skill("srboost", "SRスキブ", { boost: 0.1, boost2: 0.1, cover: 1 }, "m"),
 
-    motif: new Skill2("motif", "モチーフ", { score: 18 }, "m"),
+    motif: new Skill("motif", "モチーフ", { score: 18 }, "m"),
 
-    concent: new Skill2("concent", "コンセ", { score: 22 }, "m"),
-    slideact: new Skill2("slideact", "スラアク", { score: 10, slide: 40 }, "ml"),
+    concent: new Skill("concent", "コンセ", { score: 22 }, "m"),
+    slideact: new Skill("slideact", "スラアク", { score: 10, slide: 40 }, "ml"),
 
-    combona: new Skill2("combona", "コンボナ", { combo: 18 }, "m"),
-    coode: new Skill2("coode", "コーデ", { score: 10, combo: 15 }, "m"),
+    combona: new Skill("combona", "コンボナ", { combo: 18 }, "m"),
+    coode: new Skill("coode", "コーデ", { score: 10, combo: 15 }, "m"),
 
     encore: new Encore(),
     refrain: new Refrain(),
@@ -361,5 +306,5 @@ export const SkillList: Record<ISkillName, ISkill> = {
 
     cristal: new Cristal(),
 
-    none: new Skill2("none", "なし", {}, "m"),
+    none: new DummySkill(),
 }

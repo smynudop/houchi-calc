@@ -114,7 +114,7 @@ export class SkillHelper {
 
     static calc(abilities: (Ability | null)[], isRezo: boolean[]): FinallyAbility {
         return (life: number) => {
-            const allBuffs = abilities.map((s) => (s?.exec(life).applyBuff ?? null))
+            const allBuffs = abilities.map((s) => (s?.exec(life) ?? null))
 
             for (const buff of allBuffs) {
                 if (!buff) continue

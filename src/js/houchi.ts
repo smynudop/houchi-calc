@@ -3,13 +3,6 @@ import { MUSIC_MAXTIME } from "./data/constants"
 import { Idol } from "./idol"
 import { SkillHelper } from "./skillHelper"
 
-function union<T, U>(a: T, b: U): T & U {
-    return {
-        ...a,
-        ...b
-    }
-}
-
 type MomentInfo = {
     skills: (Ability | null)[]
     finallyAbility: FinallyAbility | null,
@@ -60,6 +53,14 @@ export class Unit {
         }
     }
 
+    getPosition(no: number) {
+        return {
+            unitno: Math.floor(no / 5),
+            no: no % 5,
+            mark: ["A", "B", "C"][Math.floor(no / 5)]
+        }
+    }
+
     async calc(req: CalcRequest): Promise<CalcResponse> {
         const {
             idols,
@@ -69,40 +70,29 @@ export class Unit {
         } = req
         const matrix = new Matrix(this.idolnum)
 
-        let activateSkillList: Buff[] = []
-        let applyResutLogList = new AbilityList()
+        const abilities = new AbilityList()
         let logs: string[] = []
 
         await this.simulator.fetch(scorePath)
 
         for (let time = 0; time < MUSIC_MAXTIME; time++) {
             for (let no = 0; no < this.idolnum; no++) {
-                let idol = idols[no]
-                let unitno = Math.floor(no / 5)
+                const idol = idols[no]
+                const pos = this.getPosition(no)
 
-                const position = this.isGrand ? `${["A", "B", "C"][unitno]}${no % 5 + 1}` : `${no + 1}`
+                const encoreAbility = abilities.getEncoreTarget(time)
 
-                let isActiveTiming = idol.isActiveTiming(time, unitno, this.simulator.music.musictime, this.isGrand) || idol.isEternal
+                let isActiveTiming = idol.isActiveTiming(time, pos.unitno, this.simulator.music.musictime, this.isGrand)
 
                 if (isActiveTiming && idol.skill.type != "none") {
-                    let skills = idols
-                        .filter((x, i) => Math.floor(i / 5) == unitno)
-                        .map((x) => x.skill)
+                    const magicSkillList = idols.slice(pos.unitno * 5, pos.unitno * 5 + 5).map(i => i.skill)
 
-                    let encoreAbility = applyResutLogList.getEncoreTarget(time)
-
-                    let ability = idol.skill.execute(activateSkillList, encoreAbility, skills)
-                    if (ability.isEncoreTarget) {
-                        applyResutLogList.push(time, no, ability)
-                    }
-
-                    if (ability.message) {
-                        logs.push(`${time}s: [${position}] ${ability.message}`)
-                    }
-
-                    let response = ability.exec(0)
-                    activateSkillList = activateSkillList.concat(response.activateBuffs)
-
+                    let ability = idol.skill.execute({
+                        applyTargetAbilities: abilities.getApplyTarget(pos.unitno),
+                        encoreAbility,
+                        magicSkillList
+                    })
+                    abilities.push(time, no, ability)
                     matrix.useSkill(time, idol.atime, no, ability)
                 }
             }
@@ -114,10 +104,11 @@ export class Unit {
 
         return {
             momentInfo: matrix.skillMatrix.map((x, i) => {
-                return union({
+                return {
                     moment: i,
-                    skillList: x.skills
-                }, simuRes.momentInfos[i])
+                    skillList: x.skills,
+                    ...simuRes.momentInfos[i]
+                }
             }),
             logs,
             musicName: simuRes.musicName,
@@ -136,28 +127,42 @@ type AbilityLog = {
 }
 
 class AbilityList {
-    list: AbilityLog[]
+    allList: AbilityLog[] = []
+    encoreTargetList: AbilityLog[] = []
+    applyTargetList: { [unitno: number]: Ability[] } = {}
     constructor() {
-        this.list = []
     }
 
-    clear() {
-        this.list = []
-    }
+    push(time: number, position: number, ability: Ability | null) {
+        if (ability == null) return;
 
-    push(time: number, position: number, ability: Ability) {
-        this.list.push({
+        this.allList.push({
             time: time,
             position: position,
             ability: ability,
         })
+        if (ability.isEncoreTarget) {
+            this.encoreTargetList.push({
+                time: time,
+                position: position,
+                ability: ability,
+            })
+        }
+        if (ability.isApplyTarget) {
+            const unitno = Math.floor(position / 5)
+            if (this.applyTargetList[unitno] == undefined) {
+                this.applyTargetList[unitno] = []
+            }
+            this.applyTargetList[unitno].push(ability)
+        }
+
     }
 
     getEncoreTarget(time: number) {
         //アンコールターゲットを確認
         let order = [9, 7, 6, 8, 10, 4, 2, 1, 3, 5, 14, 12, 11, 13, 15]
 
-        const list = this.list
+        const list = this.encoreTargetList
             .filter((x) => x.ability != null)
             .filter((x) => x.time < time)
             .sort((a, b) => a.time - b.time || order[b.position] - order[a.position] || 0)
@@ -168,6 +173,10 @@ class AbilityList {
         } else {
             return list[0].ability
         }
+    }
+
+    getApplyTarget(unitno: number) {
+        return this.applyTargetList[unitno] ?? []
     }
 }
 
