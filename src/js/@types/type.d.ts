@@ -3,8 +3,8 @@ type IAttr = "cu" | "co" | "pa"
 type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp" | "eternal"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"
 type ILiveType = "normal" | "grand"
-type INoteType = "tap" | "flick_left" | "flick_right" | "flick" | "long" | "slide"
-type ISkillFrame = "score" | "combo" | "slide" | "heal" | "heal2" | "support" | "boost" | "boost2" | "cover" | "cut"
+type INoteType = "tap" | "flick_left" | "flick_right" | "flick" | "long" | "slide" | "longflick" | "slideflick"
+type ISkillFrame = "score" | "combo" | "heal" | "heal2" | "support" | "boost" | "boost2" | "cover" | "cut"
 
 const skillNameList = [
     "support",
@@ -94,7 +94,11 @@ type SkillExecuteProp = {
     encoreAbility: Ability | null
     magicSkillList: ISkill[]
 }
-type AbilityExecute = (life: number) => SkillEffect
+type AbilityExecProp = {
+    life: number
+    noteType: INoteType
+}
+type AbilityExecute = (prop: AbilityExecProp) => SkillEffect
 type Ability = {
     type: ISkillName
     nameja: string
@@ -109,7 +113,7 @@ type Ability = {
 type MaybeAbility = Ability | null
 
 
-type FinallyAbility = (life: number) => RequiredBuff
+type FinallyAbility = (prop: AbilityExecProp) => RequiredBuff
 
 interface INote {
     type: INoteType

@@ -243,7 +243,7 @@ export class Simulator {
         for (let moment = 0; moment < matrix.skillMatrix.length; moment++) {
             const info = matrix.skillMatrix[moment]
 
-            const skill = info.finallyAbility!(life)
+            const skill = info.finallyAbility!({ life, noteType: "tap" })
 
             let judge: Judge = "miss"
             if (!this.isHouchi) {
@@ -353,7 +353,6 @@ export class Simulator {
     perfect(moment: number, bonus: RequiredBuff, nowcombo: number, appeal: number): JudgeResponse {
         let scoreBonus = (100 + bonus.score) / 100
         let comboBonus = (100 + bonus.combo) / 100
-        let slide = (100 + bonus.slide) / 100
 
         let basicValue = this.basicValue(appeal)
 
@@ -367,7 +366,7 @@ export class Simulator {
                 continue
             }
             combo++
-            let skill_scorebonus = n.no && this.isGrand ? Math.max(scoreBonus, slide) : scoreBonus
+            let skill_scorebonus = n.no && this.isGrand ? scoreBonus : scoreBonus
             let skill_combobonus = combo == 1 ? 1 : comboBonus
 
             n.score = Math.round(basicValue * skill_scorebonus * skill_combobonus * this.combobonus(combo))

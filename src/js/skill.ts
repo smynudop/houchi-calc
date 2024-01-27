@@ -33,7 +33,7 @@ class Skill implements ISkill {
             isEncoreTarget: true,
             isApplyTarget: true,
             message: `${this.nameja}が発動しました`,
-            exec: (life: number) => skillEffect,
+            exec: ({ life }: AbilityExecProp) => skillEffect,
         }
     }
 }
@@ -45,6 +45,41 @@ class DummySkill extends Skill {
 
     execute(): Ability | null {
         return null
+    }
+}
+
+class SlideAct extends Skill {
+
+    constructor(type: ISkillName, nameja: string, activeSkill: Buff, atype: ATime) {
+        super("slideact", "スラアク", { score: 10 }, "ml")
+    }
+
+    execute(): Ability | null {
+        const skillEffect: SkillEffect = {
+            name: this.type,
+            nameja: this.nameja,
+            ...this.activeSkill,
+        }
+
+        const exec = ({ life, noteType }: AbilityExecProp): SkillEffect => {
+            if (noteType == "slide" || noteType == "slideflick") {
+                return { name: "slideact", nameja: "スラアク", score: 40 }
+            } else {
+                return { name: "slideact", nameja: "スラアク", score: 10 }
+            }
+        }
+
+
+        return {
+            type: this.type,
+            nameja: this.nameja,
+            executeType: this.type,
+            isMagic: false,
+            isEncoreTarget: true,
+            isApplyTarget: true,
+            message: `${this.nameja}が発動しました`,
+            exec,
+        }
     }
 }
 
@@ -84,13 +119,12 @@ class Refrain implements ISkill {
     }
 
     execute({ applyTargetAbilities }: SkillExecuteProp): Ability {
-        const exec: AbilityExecute = (life: number) => {
-            const applyBuffList = applyTargetAbilities.map(a => a.exec(life))
+        const exec: AbilityExecute = (prop: AbilityExecProp) => {
+            const applyBuffList = applyTargetAbilities.map(a => a.exec(prop))
             return {
                 name: this.type,
                 nameja: this.nameja,
                 score: SkillHelper.max(applyBuffList, "score"),
-                slide: SkillHelper.max(applyBuffList, "slide"),
                 combo: SkillHelper.max(applyBuffList, "combo"),
             }
         }
@@ -126,13 +160,12 @@ class Alternate implements ISkill {
     }
 
     execute({ applyTargetAbilities }: SkillExecuteProp): Ability {
-        const exec: AbilityExecute = (life: number) => {
-            const applyBuffList = applyTargetAbilities.map(a => a.exec(life))
+        const exec: AbilityExecute = (prop: AbilityExecProp) => {
+            const applyBuffList = applyTargetAbilities.map(a => a.exec(prop))
             return {
                 name: this.type,
                 nameja: this.nameja,
                 score: Math.ceil(SkillHelper.max(applyBuffList, "score") * 1.7),
-                slide: Math.ceil(SkillHelper.max(applyBuffList, "slide") * 1.7),
                 combo: -20,
             }
         }
@@ -169,8 +202,8 @@ class Mutual implements ISkill {
 
     execute({ applyTargetAbilities }: SkillExecuteProp): Ability {
 
-        const exec: AbilityExecute = (life: number) => {
-            const applyBuffList = applyTargetAbilities.map(a => a.exec(life))
+        const exec: AbilityExecute = (prop: AbilityExecProp) => {
+            const applyBuffList = applyTargetAbilities.map(a => a.exec(prop))
 
             return {
                 name: this.type,
@@ -268,7 +301,7 @@ class Magic implements ISkill {
             isEncoreTarget: true,
             isApplyTarget: false,
             message: `マジックは${skillNames}を発動しました。\n${messages}`,
-            exec: (life: number) => { return { name: "magic", nameja: "マジック" } },
+            exec: (prop: AbilityExecProp) => { return { name: "magic", nameja: "マジック" } },
             childAbilities: abilities
         }
     }
@@ -292,7 +325,7 @@ export const SkillList: Record<ISkillName, ISkill> = {
     motif: new Skill("motif", "モチーフ", { score: 18 }, "m"),
 
     concent: new Skill("concent", "コンセ", { score: 22 }, "m"),
-    slideact: new Skill("slideact", "スラアク", { score: 10, slide: 40 }, "ml"),
+    slideact: new Skill("slideact", "スラアク", { score: 10 }, "ml"),
 
     combona: new Skill("combona", "コンボナ", { combo: 18 }, "m"),
     coode: new Skill("coode", "コーデ", { score: 10, combo: 15 }, "m"),

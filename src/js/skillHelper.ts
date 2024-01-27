@@ -47,9 +47,6 @@ export class SkillHelper {
             combo: skill.combo == null ? 0
                 : skill.combo < 0 ? skill.combo
                     : Math.ceil(skill.combo * boost),
-            slide: skill.slide == null ? 0
-                : skill.slide < 0 ? skill.slide
-                    : Math.ceil(skill.slide * boost),
             heal:
                 Math.max(
                     Math.ceil((skill.heal ?? 0) * boost2),
@@ -73,7 +70,6 @@ export class SkillHelper {
             heal2: SkillHelper.max(skills, "heal2"),
             boost: SkillHelper.max(skills, "boost"),
             boost2: SkillHelper.max(skills, "boost2"),
-            slide: SkillHelper.max(skills, "slide"),
             cover: SkillHelper.max(skills, "cover"),
             cut: SkillHelper.max(skills, "cut")
         }
@@ -88,7 +84,6 @@ export class SkillHelper {
             combo: SkillHelper.sum(skills, "combo"),
             heal: SkillHelper.sum(skills, "heal"),
             heal2: SkillHelper.max(skills, "heal2"),
-            slide: SkillHelper.sum(skills, "slide"),
             boost: SkillHelper.sum(skills, "boost"),
             cover: SkillHelper.sum(skills, "cover"),
             cut: SkillHelper.sum(skills, "cut")
@@ -113,15 +108,8 @@ export class SkillHelper {
     }
 
     static calc(abilities: (Ability | null)[], isRezo: boolean[]): FinallyAbility {
-        return (life: number) => {
-            const allBuffs = abilities.map((s) => (s?.exec(life) ?? null))
-
-            for (const buff of allBuffs) {
-                if (!buff) continue
-                if (buff.slide == null || buff.slide < (buff.score ?? 0)) {
-                    buff.slide = buff.score
-                }
-            }
+        return (prop: AbilityExecProp) => {
+            const allBuffs = abilities.map((s) => (s?.exec(prop) ?? null))
 
             let rezoBoost = SkillHelper.calcBoostEffect(allBuffs, true)
             let normalBoost = SkillHelper.calcBoostEffect(allBuffs, false)

@@ -20,6 +20,8 @@ export const DECREASE_LIFE: Record<ILiveType, DecreaseLife> = {
         flick_left: 20,
         flick_right: 20,
         slide: 10,
+        longflick: 10,
+        slideflick: 10
     },
     grand: {
         tap: 10,
@@ -28,5 +30,7 @@ export const DECREASE_LIFE: Record<ILiveType, DecreaseLife> = {
         flick_left: 20,
         flick_right: 20,
         slide: 20,
+        longflick: 20,
+        slideflick: 20
     },
 }

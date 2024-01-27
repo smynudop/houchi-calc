@@ -48,7 +48,6 @@ it('boost', () => {
         nameja: "",
         score: -20,
         combo: 21,
-        slide: 40,
 
         heal: 3,
         support: 3,
@@ -61,7 +60,6 @@ it('boost', () => {
     })
     expect(s1?.score).toBe(-20)
     expect(s1?.combo).toBe(32)
-    expect(s1?.slide).toBe(60)
     expect(s1?.heal).toBe(4)
     expect(s1?.cut).toBe(0.6)
 
