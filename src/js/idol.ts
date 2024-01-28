@@ -12,6 +12,10 @@ export class Idol {
     atime: number
     skill: ISkill
     isEternal: boolean = false
+    /** ユニット番号 */
+    unitno: number = 0
+    /** 全体の通し番号 */
+    no: number = 0
 
     constructor(data: IdolProfile) {
         let type = data[4]
@@ -73,34 +77,27 @@ export class Idol {
      * @param isGrand 
      * @returns 
      */
-    isActiveTiming(sec: number, unitno: number, musictime: number, isGrand: boolean) {
+    isActiveTiming(sec: number, isGrand: boolean) {
         if (this.isEternal) {
             return sec == 0
         }
 
-
-        let mod = [2, 1, 0][unitno]
+        let mod = [2, 1, 0][this.unitno]
 
         let isTiming = sec % this.interval == 0
         let isNotFirst = sec >= this.interval
         let isMyTurn = !isGrand || (sec / this.interval) % 3 == mod
-        let isNotNearEnd = sec <= musictime - 3
 
-        return isTiming && isNotFirst && isMyTurn && isNotNearEnd
+        return isTiming && isNotFirst && isMyTurn
     }
 
-    isActive(moment: number, unitno: number, musictime: number, isGrand: boolean) {
-        let m = moment % (this.interval * 2)
-        let sec = Math.floor(moment / 2)
-        let turn = Math.floor(sec / this.interval)
-        let startsec = turn * this.interval
-        let mod = [2, 1, 0][unitno]
-
-        if (m >= this.atime) return false
-        if (!turn) return false
-        if (turn % 3 != mod && isGrand) return false
-        if (startsec > musictime - 3) return false
-        return true
+    executeSkill(prop: SkillExecuteProp) {
+        return {
+            no: this.no,
+            unitno: this.unitno,
+            atime: this.atime,
+            skill: this.skill.execute(prop)
+        }
     }
 }
 

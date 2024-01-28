@@ -1,17 +1,15 @@
-import { Simulator, SimulatorMomentInfo } from "./simulator"
+import { Music } from "./simulator"
 import { MUSIC_MAXTIME } from "./data/constants"
 import { Idol } from "./idol"
 import { SkillHelper } from "./skillHelper"
 
-type MomentInfo = {
-    skills: (Ability | null)[]
-    finallyAbility: FinallyAbility | null,
-}
+
+
 type SkillList = {
     moment: number,
     skillList: (Ability | null)[]
 }
-export type CalcMomentInfo = SkillList & SimulatorMomentInfo
+export type CalcMomentInfo = SkillList
 export type CalcRequest = {
     idols: Idol[],
     isGuestRezo: boolean,
@@ -21,24 +19,19 @@ export type CalcRequest = {
 export type CalcResponse = {
     momentInfo: CalcMomentInfo[]
     logs: string[],
-    musicName: string
-    totalScore: number
-    unitLife: number
-    dangerTime: number
-    maxCombo: number
 }
 
 export class Unit {
     isGrand: boolean
     idolnum: 5 | 15
-    simulator: Simulator
     isHouchi: boolean
+    cache: Map<string, IMusic> = new Map()
+    music: Music
     constructor(isGrand: boolean, isHouchi = true) {
         this.isGrand = isGrand
         this.isHouchi = isHouchi
-
+        this.music = new Music({})
         this.idolnum = isGrand ? 15 : 5
-        this.simulator = new Simulator(this, isGrand, isHouchi)
     }
 
     isRezo(idols: Idol[], isGuestRezo: boolean): boolean[] {
@@ -53,11 +46,44 @@ export class Unit {
         }
     }
 
-    getPosition(no: number) {
-        return {
-            unitno: Math.floor(no / 5),
-            no: no % 5,
-            mark: ["A", "B", "C"][Math.floor(no / 5)]
+
+
+    async fetch(filename: string) {
+        let score: IMusic
+        if (this.cache.has(filename)) {
+            score = this.cache.get(filename)!
+        } else {
+            const res = await fetch(filename)
+            score = await res.json() as IMusic
+            this.cache.set(filename, score)
+        }
+
+        this.music = new Music(score)
+
+    }
+
+    basicValue(appeal: number) {
+        return (appeal * this.music.coefficient) / this.music.notesCount
+    }
+
+    combobonus(combo: number) {
+        let allnote = this.music.notesCount
+        if (combo >= Math.floor(allnote * 0.9)) return 2.0
+        if (combo >= Math.floor(allnote * 0.8)) return 1.7
+        if (combo >= Math.floor(allnote * 0.7)) return 1.5
+        if (combo >= Math.floor(allnote * 0.5)) return 1.4
+        if (combo >= Math.floor(allnote * 0.25)) return 1.3
+        if (combo >= Math.floor(allnote * 0.1)) return 1.2
+        if (combo >= Math.floor(allnote * 0.05)) return 1.1
+        return 1.0
+    }
+
+    judgeKeisu(judge: Judge) {
+        switch (judge) {
+            case "perfect":
+                return 1
+            default:
+                return 0
         }
     }
 
@@ -69,58 +95,121 @@ export class Unit {
             scorePath
         } = req
         const matrix = new Matrix(this.idolnum)
+        for (let no = 0; no < this.idolnum; no++) {
+            const idol = idols[no]
+            idol.no = no
+            idol.unitno = Math.floor(no / 5)
+        }
 
         const abilities = new AbilityList()
         let logs: string[] = []
 
-        await this.simulator.fetch(scorePath)
+        let life = 300
+        let combo = 0
+        const basicValue = this.basicValue(appeal)
+        let score = 0
 
+        await this.fetch(scorePath)
+
+        const isRezo = this.isRezo(idols, isGuestRezo)
         for (let time = 0; time < MUSIC_MAXTIME; time++) {
-            for (let no = 0; no < this.idolnum; no++) {
-                const idol = idols[no]
-                const pos = this.getPosition(no)
-
+            if (time <= this.music.musictime - 3) {
                 const encoreAbility = abilities.getEncoreTarget(time)
+                const executeSkills = idols.filter(i => i.isActiveTiming(time, this.isGrand))
+                    .map(i => {
+                        return {
+                            unitno: i.unitno,
+                            no: i.no,
+                            atime: i.atime,
+                            skill: i.skill
+                        }
+                    })
+                executeSkills.sort()
 
-                let isActiveTiming = idol.isActiveTiming(time, pos.unitno, this.simulator.music.musictime, this.isGrand)
+                while (executeSkills.length > 0) {
+                    const info = executeSkills.shift()!
+                    const magicSkillList = idols.filter(i => i.unitno == info.unitno).map(i => i.skill)
 
-                if (isActiveTiming && idol.skill.type != "none") {
-                    const magicSkillList = idols.slice(pos.unitno * 5, pos.unitno * 5 + 5).map(i => i.skill)
-
-                    let ability = idol.skill.execute({
-                        applyTargetAbilities: abilities.getApplyTarget(pos.unitno),
+                    const ability = info.skill.execute({
+                        applyTargetAbilities: abilities.getApplyTarget(info.unitno),
                         encoreAbility,
                         magicSkillList
                     })
-                    abilities.push(time, no, ability)
-                    matrix.useSkill(time, idol.atime, no, ability)
+
+
+                    abilities.push(time, info.no, ability)
+                    matrix.useSkill(time, info.atime, info.no, ability)
+
                 }
             }
+
+            for (let m = 0; m < 2; m++) {
+                const moment = time * 2 + m
+                const notes: INoteDetail[] = []
+                const momentinfo = matrix.getAbilities(moment)
+                const boost = SkillHelper.calcBoostEffect(momentinfo)
+                const { support, cut } = SkillHelper.calc2(momentinfo, isRezo, boost)
+
+                //パーフェクトじゃない場合、つながっているノーツを切る
+                if (support < 4) {
+                    let { damage, notes } = this.music.disConnectLong(moment)
+                    damage = damage * (1 - cut)
+                    life -= damage
+
+                    //切れたノーツがある場合、コンボをリセットする
+                    if (notes.length >= 0) {
+                        combo = 0
+                    }
+                }
+
+                for (const note of notes) {
+                    if (note.result == "gone") continue
+
+                    let judge: Judge = "miss"
+                    if (support >= 4) judge = "perfect"
+
+                    //ミスの場合、ライフを減らす
+                    if (judge == "miss") {
+                        let damage = 0
+                        damage = damage * (1 - cut)
+                        life -= damage
+                        this.music.disConnect(note.no)
+                    }
+
+                    //ライフを回復する
+                    const { heal } = SkillHelper.calc2(momentinfo, isRezo, boost)
+                    life += heal
+
+                    if (judge == "perfect") combo++
+                    else combo = 0
+
+                    const { score: scoreBonus, combo: comboBonus } = SkillHelper.calc2(momentinfo, isRezo, boost, { life, noteType: note.type, judge })
+                    const comboKeisu = this.combobonus(combo)
+                    const judgeKeisu = this.judgeKeisu(judge)
+
+                    const noteScore = basicValue * (1 + scoreBonus) * (1 + comboBonus) * comboKeisu * judgeKeisu
+                    score += noteScore
+                }
+
+            }
+
         }
 
-        matrix.calc(this.isRezo(idols, isGuestRezo))
-
-        const simuRes = await this.simulator.calc(matrix, req)
-
         return {
-            momentInfo: matrix.skillMatrix.map((x, i) => {
-                return {
-                    moment: i,
-                    skillList: x.skills,
-                    ...simuRes.momentInfos[i]
-                }
-            }),
+            // momentInfo: matrix.skillMatrix.map((x, i) => {
+            //     return {
+            //         moment: i,
+            //         skillList: x,
+            //         ...simuRes.momentInfos[i]
+            //     }
+            // }),
+            momentInfo: [],
             logs,
-            musicName: simuRes.musicName,
-            maxCombo: simuRes.maxCombo,
-            totalScore: simuRes.totalScore,
-            unitLife: simuRes.unitLife,
-            dangerTime: simuRes.dangerTime
         }
     }
 }
 
-type AbilityLog = {
+export type AbilityLog = {
     time: number
     position: number
     ability: Ability
@@ -155,6 +244,17 @@ class AbilityList {
             }
             this.applyTargetList[unitno].push(ability)
         }
+        if (ability.childAbilities != null) {
+            for (const c of ability.childAbilities) {
+                if (c.isApplyTarget) {
+                    const unitno = Math.floor(position / 5)
+                    if (this.applyTargetList[unitno] == undefined) {
+                        this.applyTargetList[unitno] = []
+                    }
+                    this.applyTargetList[unitno].push(ability)
+                }
+            }
+        }
 
     }
 
@@ -180,52 +280,55 @@ class AbilityList {
     }
 }
 
+type AbilityInfo = {
+    ability: Ability
+    no: number
+    unitno: number
+}
 
 
 export class Matrix {
     idolnum: 5 | 15
-    skillMatrix: MomentInfo[]
+    skillMatrix: AbilityInfo[][]
 
     constructor(idolnum: 5 | 15) {
         this.idolnum = idolnum
 
         this.skillMatrix = []
         for (let i = 0; i < MUSIC_MAXTIME * 2; i++) {
-            const skills: (Ability | null)[] = new Array(idolnum)
-            skills.fill(null)
+            const skills: AbilityInfo[] = []
+            this.skillMatrix.push(skills)
+        }
+    }
 
-            this.skillMatrix.push({
-                skills,
-                finallyAbility: null,
+    useSkill(time: number, mDuration: number, no: number, ability: Ability | null) {
+        if (ability == null) {
+            return
+        }
+
+        if (ability.type == "none") return
+
+        for (let d = 0; d < mDuration; d++) {
+            let moment = time * 2 + d
+            this.skillMatrix[moment].push({
+                no,
+                unitno: Math.floor(no / 5),
+                ability
             })
         }
     }
 
-    calc(isRezo: boolean[]) {
-        for (let moment = 0; moment < MUSIC_MAXTIME * 2; moment++) {
-            const info = this.skillMatrix[moment]
-            info.finallyAbility = SkillHelper.calc(info.skills, isRezo)
+    getAbilities(moment: number) {
+        const infos = this.skillMatrix[moment]
+        const result = new Map<number, Ability[]>
+
+        for (const info of infos) {
+            if (!result.has(info.unitno)) {
+                result.set(info.unitno, [])
+            }
+            result.get(info.unitno)!.push(info.ability)
         }
-    }
-
-    getFinallyAbilities() {
-        return this.skillMatrix
-            .map(x => x.finallyAbility)
-            .filter((x): x is FinallyAbility => x != null)
-    }
-
-    useSkill(time: number, mDuration: number, no: number, skill: Ability | null) {
-        if (skill == null) {
-            return
-        }
-
-        if (skill.type == "none") return
-
-        for (let d = 0; d < mDuration; d++) {
-            let moment = time * 2 + d
-            const info = this.skillMatrix?.[moment]
-            if (info) info.skills[no] = skill
-        }
+        return result
     }
 }
 

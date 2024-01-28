@@ -97,6 +97,7 @@ type SkillExecuteProp = {
 type AbilityExecProp = {
     life: number
     noteType: INoteType
+    judge: Judge
 }
 type AbilityExecute = (prop: AbilityExecProp) => SkillEffect
 type Ability = {

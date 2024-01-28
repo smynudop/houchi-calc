@@ -22,7 +22,7 @@ const getLiveType = (difficulity: IDifficult): ILiveType => {
     }
 }
 
-class Music {
+export class Music {
     level: number
     name: string
     coefficient: number
@@ -75,25 +75,7 @@ class Music {
     }
 
     getLifeOfNote(note: INote) {
-        let result
-        switch (this.liveType) {
-            case "grand":
-                //短フリックはタップ扱い
-                if (note.no == 0) {
-                    return this.decreaseLife.tap
-                }
-                return this.decreaseLife[note.type]
-
-            case "normal":
-                if (note.no != 0) {
-                    return this.decreaseLife.long
-                }
-                return this.decreaseLife[note.type]
-        }
-        if (result === undefined) {
-            console.warn("ライフが取得できません", note.type)
-        }
-        return result
+        return this.decreaseLife[note.type]
     }
 
     frame(moment: number) {
@@ -109,7 +91,7 @@ class Music {
     disConnectLong(moment: number) {
         let frame = this.frame(moment)
         let result: INote[] = []
-
+        let damage = 0
         for (let [key, info] of this.longInfo) {
             if (!info.isContinue) continue
             if (info.begin <= frame && frame <= info.end) {
@@ -118,9 +100,13 @@ class Music {
                     .filter((n) => n.no == key && n.frame >= frame)
                     .sort((a, b) => a.frame - b.frame)
                 result.push(notes[0])
+                damage += this.getLifeOfNote(notes[0])
             }
         }
-        return result
+        return {
+            notes: result,
+            damage
+        }
     }
 
     isContinue(no: number) {
@@ -150,292 +136,5 @@ class Music {
         return this.notes.filter(
             (n) => n.frame >= this.frame(moment) && n.frame < this.frame(moment + 1)
         )
-    }
-}
-
-type SimulatorResponse = {
-    momentInfos: SimulatorMomentInfo[]
-    musicName: string
-    totalScore: number
-    unitLife: number
-    dangerTime: number
-    maxCombo: number
-}
-
-export type SimulatorMomentInfo = {
-    finallyBuff: RequiredBuff | null
-    judge: Judge
-    notes: INoteDetail[]
-    life: number
-}
-
-type JudgeResponse = {
-    addLife: number
-    combo: number
-    breakCombo: boolean
-    danger: boolean
-}
-
-export class Simulator {
-    unit: Unit
-    isGrand: boolean
-    music: Music
-    isHouchi: boolean
-    cache: Map<string, IMusic>
-
-    constructor(unit: Unit, isGrand: boolean, isHouchi = true) {
-        this.unit = unit
-        this.isGrand = isGrand
-        this.music = new Music({})
-        this.isHouchi = isHouchi
-        this.cache = new Map<string, IMusic>()
-    }
-
-    async fetch(filename: string) {
-        let score: IMusic
-        if (this.cache.has(filename)) {
-            score = this.cache.get(filename)!
-        } else {
-            const res = await fetch(filename)
-            score = await res.json() as IMusic
-            this.cache.set(filename, score)
-        }
-
-        this.music = new Music(score)
-
-    }
-
-    reset() {
-        this.music.resetNotes()
-    }
-
-    basicValue(appeal: number) {
-        return (appeal * this.music.coefficient) / this.music.notesCount
-    }
-
-    combobonus(combo: number) {
-        let allnote = this.music.notesCount
-        if (combo >= Math.floor(allnote * 0.9)) return 2.0
-        if (combo >= Math.floor(allnote * 0.8)) return 1.7
-        if (combo >= Math.floor(allnote * 0.7)) return 1.5
-        if (combo >= Math.floor(allnote * 0.5)) return 1.4
-        if (combo >= Math.floor(allnote * 0.25)) return 1.3
-        if (combo >= Math.floor(allnote * 0.1)) return 1.2
-        if (combo >= Math.floor(allnote * 0.05)) return 1.1
-        return 1.0
-    }
-
-    async calc(matrix: Matrix, req: CalcRequest): Promise<SimulatorResponse> {
-        this.reset()
-        if (req.scorePath != "") {
-            await this.fetch(req.scorePath)
-
-        }
-
-        const momentInfos: SimulatorMomentInfo[] = []
-
-        let dangerMoment = 0
-        let life = 0
-        const addLifes = []
-        const combos: number[] = []
-        let combo: number = 0
-
-        for (let moment = 0; moment < matrix.skillMatrix.length; moment++) {
-            const info = matrix.skillMatrix[moment]
-
-            const skill = info.finallyAbility!({ life, noteType: "tap" })
-
-            let judge: Judge = "miss"
-            if (!this.isHouchi) {
-                judge = "perfect"
-            } else {
-                if (skill.support >= 4) {
-                    judge = "perfect"
-                }
-            }
-
-            let jres: JudgeResponse
-            switch (judge) {
-                case "perfect":
-                    jres = this.perfect(moment, skill, combo, req.appeal)
-                    break
-                // case "guard":
-                //     jres = this.guard(moment)
-                //     break
-                case "miss":
-                    jres = this.miss(moment, skill)
-                    break
-            }
-            addLifes.push(jres.addLife)
-            if (jres.breakCombo) {
-                combos.push(combo)
-                combo = 0
-            } else {
-                combo = jres.combo
-            }
-            if (jres.danger && moment < this.music.musictime * 2) {
-                dangerMoment++
-            }
-
-            momentInfos.push({
-                finallyBuff: skill,
-                judge,
-                life: 0,
-                notes: this.music.pickNotesByMoment(moment)
-            })
-
-
-        }
-
-        const lifeResponse = this.calcLife(addLifes, req.idols.some(i => i.type == "cristal"))
-        for (const [i, info] of momentInfos.entries()) {
-            info.life = lifeResponse.percentList[i]
-        }
-
-
-        return {
-            momentInfos,
-            musicName: this.music.name,
-            totalScore: this.music.totalScore,
-            unitLife: lifeResponse.requiredLife,
-            dangerTime: dangerMoment / 2,
-            maxCombo: Math.max(...combos, 0)
-        }
-
-
-
-    }
-
-    calcLife(lifes: number[], start200: boolean) {
-
-        const requiredLife = this.getRequiredLife(lifes, start200)
-        const unitlife = Math.max(requiredLife, LIFE_DEFAULT)
-
-        let simuLife = start200 ? unitlife * 2 : unitlife
-
-        let percentList: number[] = []
-
-        for (let moment = 0; moment < MUSIC_MAXTIME * 2; moment++) {
-            simuLife += lifes[moment]
-            simuLife = Math.min(simuLife, unitlife * 2)
-
-            let percent = Math.ceil((simuLife * 100) / unitlife)
-            percent = Math.min(200, percent)
-            percent = Math.max(0, percent)
-
-            percentList.push(percent)
-        }
-
-        return {
-            requiredLife,
-            percentList
-        }
-    }
-
-    getRequiredLife(lifes: number[], start200: boolean) {
-        let lifeSimu: number[] = []
-        let life = 0
-        for (let l of lifes) {
-            life -= l
-            lifeSimu.push(life)
-        }
-        if (start200) {
-            console.log(lifeSimu)
-            const max = Math.max(...lifeSimu) - Math.min(...lifeSimu)
-            return Math.floor(max / 2) + 1
-        } else {
-            const max = Math.max(...lifeSimu)
-            return max + 1
-        }
-
-    }
-
-    perfect(moment: number, bonus: RequiredBuff, nowcombo: number, appeal: number): JudgeResponse {
-        let scoreBonus = (100 + bonus.score) / 100
-        let comboBonus = (100 + bonus.combo) / 100
-
-        let basicValue = this.basicValue(appeal)
-
-        let life = 0
-        let combo = nowcombo
-
-        let notes = this.music.pickNotesByMoment(moment)
-        for (let n of notes) {
-            if (!this.music.isContinue(n.no)) {
-                n.result = "gone"
-                continue
-            }
-            combo++
-            let skill_scorebonus = n.no && this.isGrand ? scoreBonus : scoreBonus
-            let skill_combobonus = combo == 1 ? 1 : comboBonus
-
-            n.score = Math.round(basicValue * skill_scorebonus * skill_combobonus * this.combobonus(combo))
-            n.result = "perfect"
-            life += bonus.heal
-        }
-        return {
-            addLife: life,
-            combo,
-            breakCombo: false,
-            danger: false
-        }
-    }
-
-    disConnectLong(moment: number) {
-        let life = 0
-        let notes = this.music.disConnectLong(moment)
-        for (let n of notes) {
-            life -= this.music.getLifeOfNote(n)!
-        }
-        return life
-    }
-
-    guard(moment: number): JudgeResponse {
-        let life = this.disConnectLong(moment)
-        let isReset = life < 0
-
-        let notes = this.music.pickNotesByMoment(moment)
-        for (let n of notes) {
-            if (!this.music.isContinue(n.no)) {
-                n.result = "gone"
-                continue
-            }
-            n.result = "guard"
-            isReset = true
-            this.music.disConnect(n.no)
-        }
-        return {
-            addLife: 0,
-            combo: 0,
-            breakCombo: isReset,
-            danger: false
-        }
-    }
-
-    miss(moment: number, bonus: RequiredBuff): JudgeResponse {
-        let life = this.disConnectLong(moment)
-        let isReset = life < 0
-
-        let notes = this.music.pickNotesByMoment(moment)
-
-        for (let n of notes) {
-            if (!this.music.isContinue(n.no)) {
-                n.result = "gone"
-                continue
-            }
-            n.result = "miss"
-            this.music.disConnect(n.no)
-
-            let l = this.music.getLifeOfNote(n)!
-            const cut = Math.min(bonus.cut, 1)
-            l = Math.floor(l * (1 - cut))
-            life -= l
-        }
-        return {
-            addLife: life,
-            combo: 0,
-            breakCombo: isReset,
-            danger: true
-        }
     }
 }

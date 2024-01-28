@@ -50,7 +50,7 @@ class DummySkill extends Skill {
 
 class SlideAct extends Skill {
 
-    constructor(type: ISkillName, nameja: string, activeSkill: Buff, atype: ATime) {
+    constructor() {
         super("slideact", "スラアク", { score: 10 }, "ml")
     }
 
@@ -325,7 +325,7 @@ export const SkillList: Record<ISkillName, ISkill> = {
     motif: new Skill("motif", "モチーフ", { score: 18 }, "m"),
 
     concent: new Skill("concent", "コンセ", { score: 22 }, "m"),
-    slideact: new Skill("slideact", "スラアク", { score: 10 }, "ml"),
+    slideact: new SlideAct(),
 
     combona: new Skill("combona", "コンボナ", { combo: 18 }, "m"),
     coode: new Skill("coode", "コーデ", { score: 10, combo: 15 }, "m"),

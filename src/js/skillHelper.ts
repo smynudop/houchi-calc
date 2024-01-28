@@ -1,3 +1,9 @@
+
+type BoostEffect2 = {
+    rezo: BoostEffect,
+    normal: BoostEffect
+}
+
 export class SkillHelper {
     static max(skills: (Buff | null)[], frame: keyof Buff): number {
         let result = -9999
@@ -11,20 +17,8 @@ export class SkillHelper {
         return result
     }
 
-    static sum(skills: (SkillEffect | null)[], frame: keyof Buff): number {
+    static sum(skills: (Buff | null)[], frame: keyof Buff): number {
         let skills2 = skills.filter((s): s is SkillEffect => s != null)
-
-        //マジックが複数ある場合はマジック内で最大のものを採用
-        let magicSkill: SkillEffect = {
-            name: "magic",
-            nameja: "マジック統合",
-            [frame]: SkillHelper.max(
-                skills2.filter((s) => s.name == "magic"),
-                frame
-            ),
-        }
-        skills2 = skills2.filter((s) => s.name != "magic").concat(magicSkill)
-
         let result = 0
         for (let skill of skills2) {
             result += skill[frame] ?? 0
@@ -32,15 +26,13 @@ export class SkillHelper {
         return result
     }
 
-    static boost(skill: MaybeSkillEffect, boostEffect: BoostEffect): MaybeSkillEffect {
-        if (skill == null) return null
+    static boost(skill: Buff, boostEffect: BoostEffect): Buff {
+        //if (skill == null) return null
 
         const boost = 1 + boostEffect.boost
         const boost2 = 1 + boostEffect.boost2
 
         let r = {
-            name: skill.name,
-            nameja: skill.nameja,
             score: skill.score == null ? 0
                 : skill.score < 0 ? skill.score
                     : Math.ceil(skill.score * boost),
@@ -61,7 +53,7 @@ export class SkillHelper {
         return r
     }
 
-    static calcmax(skills: MaybeSkillEffect[]): RequiredBuff {
+    static calcmax(skills: Buff[]): RequiredBuff {
         return {
             support: SkillHelper.max(skills, "support"),
             score: SkillHelper.max(skills, "score"),
@@ -75,10 +67,8 @@ export class SkillHelper {
         }
     }
 
-    static combine(skills: MaybeSkillEffect[]): MaybeSkillEffect {
+    static combine(skills: Buff[]): Buff {
         return {
-            name: "none",
-            nameja: "レゾナンス統合",
             support: SkillHelper.sum(skills, "support"),
             score: SkillHelper.sum(skills, "score"),
             combo: SkillHelper.sum(skills, "combo"),
@@ -90,47 +80,61 @@ export class SkillHelper {
         }
     }
 
-    static calcBoostEffect(skills: MaybeSkillEffect[], isRezo: boolean): BoostEffect {
-        if (isRezo) {
-            return {
-                boost: SkillHelper.sum(skills, "boost"),
-                boost2: SkillHelper.sum(skills, "boost2"),
-                cover: SkillHelper.sum(skills, "cover"),
+    static calcBoostEffect(skills: Map<number, Ability[]>): BoostEffect2 {
 
-            }
-        } else {
-            return {
-                boost: SkillHelper.max(skills, "boost"),
-                boost2: SkillHelper.max(skills, "boost2"),
-                cover: SkillHelper.max(skills, "cover"),
+        const effects: Buff[] = []
+        for (const [unitno, abilities] of skills) {
+            const magicAbilities = abilities.filter(a => a.isMagic)
+            const magicBuff = SkillHelper.calcmax(magicAbilities.map(a => a.exec({ life: 0, noteType: "tap", judge: "perfect" })))
+            effects.push(magicBuff)
+
+            const nomagic = abilities.filter(a => !a.isMagic)
+            effects.push(...nomagic.map(a => a.exec({ life: 0, noteType: "tap", judge: "perfect" })))
+        }
+
+        return {
+            rezo: {
+                boost: SkillHelper.sum(effects, "boost"),
+                boost2: SkillHelper.sum(effects, "boost2"),
+                cover: SkillHelper.sum(effects, "cover")
+            },
+            normal: {
+                boost: SkillHelper.max(effects, "boost"),
+                boost2: SkillHelper.max(effects, "boost2"),
+                cover: SkillHelper.max(effects, "cover")
+
             }
         }
     }
 
-    static calc(abilities: (Ability | null)[], isRezo: boolean[]): FinallyAbility {
-        return (prop: AbilityExecProp) => {
-            const allBuffs = abilities.map((s) => (s?.exec(prop) ?? null))
+    static calc2(skills: Map<number, Ability[]>, isRezo: boolean[], boost: BoostEffect2, prop?: AbilityExecProp) {
 
-            let rezoBoost = SkillHelper.calcBoostEffect(allBuffs, true)
-            let normalBoost = SkillHelper.calcBoostEffect(allBuffs, false)
+        if (!prop) prop = { life: 0, noteType: "tap", judge: "perfect" }
 
-            let skillGroups: MaybeSkillEffect[][] = []
-            for (let i = 0; i < Math.ceil(abilities.length / 5); i++) {
-                skillGroups.push(allBuffs.slice(i * 5, i * 5 + 5))
+        const effectByPlatoon: Buff[] = []
+        for (const [unitno, abilities] of skills) {
+            const effects: Buff[] = []
+
+            const magicAbilities = abilities.filter(a => a.isMagic)
+            const magicBuff = SkillHelper.calcmax(magicAbilities.map(a => a.exec(prop!)))
+            effects.push(magicBuff)
+
+            const nomagic = abilities.filter(a => !a.isMagic)
+            effects.push(...nomagic.map(a => a.exec(prop!)))
+
+            const rezo = !!isRezo[unitno]
+
+            const boostedEffects = effects.map(e => SkillHelper.boost(e, rezo ? boost.rezo : boost.normal))
+
+            if (isRezo[unitno]) {
+                effectByPlatoon.push(SkillHelper.combine(boostedEffects))
+            } else {
+                effectByPlatoon.push(SkillHelper.calcmax(boostedEffects))
+
             }
-
-            skillGroups = skillGroups.map((x, i) => {
-                if (isRezo[i]) {
-                    let tmp = x.map((y) => SkillHelper.boost(y, rezoBoost))
-                    return [SkillHelper.combine(tmp)]
-                } else {
-                    return x.map((y) => SkillHelper.boost(y, normalBoost))
-                }
-            })
-
-            let skills = skillGroups.flat()
-
-            return SkillHelper.calcmax(skills)
         }
+
+        return SkillHelper.calcmax(effectByPlatoon)
     }
+
 }
