@@ -17,12 +17,14 @@ class Skill implements ISkill {
         this.atype = atype
     }
 
-    execute(): Ability | null {
+    execute({ logger }: SkillExecuteProp): Ability | null {
         const skillEffect: SkillEffect = {
             name: this.type,
             nameja: this.nameja,
             ...this.activeSkill,
         }
+
+        logger.log(`${this.nameja}が発動しました`)
 
 
         return {
@@ -32,7 +34,6 @@ class Skill implements ISkill {
             isMagic: false,
             isEncoreTarget: true,
             isApplyTarget: true,
-            message: `${this.nameja}が発動しました`,
             exec: ({ life }: AbilityExecProp) => skillEffect,
         }
     }
@@ -54,12 +55,14 @@ class SlideAct extends Skill {
         super("slideact", "スラアク", { score: 10 }, "ml")
     }
 
-    execute(): Ability | null {
+    execute({ logger }: SkillExecuteProp): Ability | null {
         const skillEffect: SkillEffect = {
             name: this.type,
             nameja: this.nameja,
             ...this.activeSkill,
         }
+
+        logger.log(`${this.nameja}が発動しました`)
 
         const exec = ({ life, noteType }: AbilityExecProp): SkillEffect => {
             if (noteType == "slide" || noteType == "slideflick") {
@@ -77,7 +80,6 @@ class SlideAct extends Skill {
             isMagic: false,
             isEncoreTarget: true,
             isApplyTarget: true,
-            message: `${this.nameja}が発動しました`,
             exec,
         }
     }
@@ -89,14 +91,13 @@ class Cristal extends Skill {
         super("cristal", "クリヒ", { cut: 0.5 }, "eternal")
     }
 
-    override execute(): Ability | null {
-        const ab = super.execute()
+    override execute(prop: SkillExecuteProp): Ability | null {
+        const ab = super.execute(prop)
         if (!ab) return null
         return {
             ...ab,
             isEncoreTarget: false,
             isApplyTarget: false,
-            message: null
         }
     }
 }
@@ -118,7 +119,7 @@ class Refrain implements ISkill {
         this.atype = "m"
     }
 
-    execute({ applyTargetAbilities }: SkillExecuteProp): Ability {
+    execute({ applyTargetAbilities, logger }: SkillExecuteProp): Ability {
         const exec: AbilityExecute = (prop: AbilityExecProp) => {
             const applyBuffList = applyTargetAbilities.map(a => a.exec(prop))
             return {
@@ -129,6 +130,8 @@ class Refrain implements ISkill {
             }
         }
 
+        logger.log(`リフレインが発動しました`)
+
         return {
             type: this.type,
             nameja: this.nameja,
@@ -136,7 +139,6 @@ class Refrain implements ISkill {
             isMagic: false,
             isEncoreTarget: true,
             isApplyTarget: false,
-            message: `リフレインが発動しました。`,
             exec,
         }
     }
@@ -159,7 +161,7 @@ class Alternate implements ISkill {
         this.atype = "m"
     }
 
-    execute({ applyTargetAbilities }: SkillExecuteProp): Ability {
+    execute({ applyTargetAbilities, logger }: SkillExecuteProp): Ability {
         const exec: AbilityExecute = (prop: AbilityExecProp) => {
             const applyBuffList = applyTargetAbilities.map(a => a.exec(prop))
             return {
@@ -170,6 +172,9 @@ class Alternate implements ISkill {
             }
         }
 
+        logger.log(`オルタネイトが発動しました`)
+
+
         return {
             type: this.type,
             nameja: this.nameja,
@@ -177,7 +182,6 @@ class Alternate implements ISkill {
             isMagic: false,
             isEncoreTarget: true,
             isApplyTarget: false,
-            message: `オルタネイトが発動しました。`,
             exec,
         }
     }
@@ -200,7 +204,7 @@ class Mutual implements ISkill {
         this.atype = "m"
     }
 
-    execute({ applyTargetAbilities }: SkillExecuteProp): Ability {
+    execute({ applyTargetAbilities, logger }: SkillExecuteProp): Ability {
 
         const exec: AbilityExecute = (prop: AbilityExecProp) => {
             const applyBuffList = applyTargetAbilities.map(a => a.exec(prop))
@@ -213,6 +217,8 @@ class Mutual implements ISkill {
             }
         }
 
+        logger.log(`オルタネイトが発動しました`)
+
         return {
             type: this.type,
             nameja: this.nameja,
@@ -220,7 +226,6 @@ class Mutual implements ISkill {
             isMagic: false,
             isEncoreTarget: true,
             isApplyTarget: false,
-            message: `ミューチャルが発動しました。`,
             exec,
         }
     }
@@ -261,6 +266,12 @@ class Encore implements ISkill {
 
 const wrapMagic = (skill: ISkill): ISkill => {
     const execute = (prop: SkillExecuteProp): Ability | null => {
+        const _logger = prop.logger
+        prop.logger = {
+            log: (message: string) => {
+                _logger.log(`【マジック】` + message)
+            }
+        }
         const ability = skill.execute(prop)
         if (!ability) return null
         if (ability.executeType == "magic") {
@@ -300,8 +311,12 @@ class Magic implements ISkill {
 
     execute(prop: SkillExecuteProp): Ability | null {
 
+
         const executeSkills = prop.magicSkillList.filter((s) => !s.canNOTmagicExecute && s.type != "none")
         const skillNames = executeSkills.map(s => s.nameja).join(",")
+
+        prop.logger.log(`マジックは${skillNames}を発動しました。`)
+
         return {
             type: this.type,
             nameja: this.nameja,
@@ -309,7 +324,6 @@ class Magic implements ISkill {
             isMagic: false,
             isEncoreTarget: true,
             isApplyTarget: false,
-            message: `マジックは${skillNames}を発動しました。`,
             exec: (prop: AbilityExecProp) => { return { name: "magic", nameja: "マジック" } },
             childSkills: executeSkills.map(s => wrapMagic(s))
         }

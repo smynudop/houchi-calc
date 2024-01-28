@@ -80,6 +80,10 @@ type SkillEffect = {
 } & Buff
 type MaybeSkillEffect = SkillEffect | null
 
+
+type ILogger = {
+    log: (message: string) => void
+}
 type ISkill = {
     type: ISkillName
     nameja: string
@@ -91,7 +95,8 @@ type ISkill = {
 type SkillExecuteProp = {
     applyTargetAbilities: Ability[]
     encoreAbility: Ability | null
-    magicSkillList: ISkill[]
+    magicSkillList: ISkill[],
+    logger: ILogger
 }
 type AbilityExecProp = {
     life: number
@@ -106,7 +111,6 @@ type Ability = {
     isMagic: boolean
     isEncoreTarget: boolean
     isApplyTarget: boolean
-    message: string | null
     exec: AbilityExecute
     childSkills?: ISkill[]
 }

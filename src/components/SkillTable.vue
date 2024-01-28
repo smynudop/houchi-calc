@@ -42,7 +42,7 @@ const selectFrame = (frame: number) => {
                 <td v-for="skill in info.skillList" :class="skill?.executeType">
                 </td>
                 <td class="life" :class="'lifeper-' + info.life"></td>
-                <td class="lifestate" :class="{ 'danger': info.judge == 'miss' }"></td>
+                <td class="lifestate" :class="{ 'danger': info.danger }"></td>
                 <td class="notes" :class="noteCssClass(info)"></td>
                 <td v-if="info.moment % 20 == 0" rowspan="20" class="sec">{{ (info.moment) / 2 + 10 }}
                 </td>

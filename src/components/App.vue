@@ -35,7 +35,7 @@ const option = reactive<{
     scorePath: string
 }>({
     isGuestRezo: false,
-    appeal: 420000,
+    appeal: props.isGrand ? 420000 : 260000,
     scorePath: scores[0].path
 })
 const idolnum = ref<number>(15)

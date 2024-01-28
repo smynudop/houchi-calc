@@ -115,15 +115,16 @@ export class Unit {
         }
 
         const abilities = new AbilityList()
-        let logs: string[] = []
+        const logger = new Logger()
 
         const momentInfoList: MomentInfo[] = []
         let life = 300
         let combo = 0
-        const basicValue = this.basicValue(appeal)
         let totalScore = 0
 
         await this.fetch(scorePath)
+        const basicValue = this.basicValue(appeal)
+        console.log(basicValue)
 
         type SkillInfo = {
             unitno: number
@@ -154,7 +155,8 @@ export class Unit {
                     const ability = info.skill.execute({
                         applyTargetAbilities: abilities.getApplyTarget(info.unitno),
                         encoreAbility,
-                        magicSkillList
+                        magicSkillList,
+                        logger: logger.getInstance(info.no, time)
                     })
 
 
@@ -221,7 +223,7 @@ export class Unit {
                     const comboKeisu = this.combobonus(combo)
                     const judgeKeisu = this.judgeKeisu(judge)
 
-                    const noteScore = basicValue * (1 + scoreBonus) * (1 + comboBonus) * comboKeisu * judgeKeisu
+                    const noteScore = Math.round(basicValue * (1 + scoreBonus / 100) * (1 + comboBonus / 100) * comboKeisu * judgeKeisu)
                     totalScore += noteScore
                 }
 
@@ -239,7 +241,7 @@ export class Unit {
                     ...momentInfoList[moment]
                 }
             }),
-            logs,
+            logs: logger.logs,
             musicName: this.music.name,
             totalScore,
             unitLife: 300,
@@ -374,3 +376,20 @@ export class Matrix {
 }
 
 
+export class Logger implements ILogger {
+    logs: string[] = []
+    constructor() {
+    }
+
+    getInstance(no: number, time: number): ILogger {
+        return {
+            log: (message: string) => {
+                this.log(`${time}s [${no}] ${message}`)
+            }
+        }
+    }
+
+    log(message: string) {
+        this.logs.push(message)
+    }
+}
