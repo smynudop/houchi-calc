@@ -12,7 +12,10 @@ const emits = defineEmits<{
     (e: "selectFrame", val: number): void
 }>()
 const noteCssClass = (info: CalcMomentInfo) => {
-    return `notenum_${info.noteLength} notes_${info.judge}`
+    if (!info.danger && info.judge == "miss") {
+        return `notes_guard`
+    }
+    return `notes_${info.judge}`
 }
 const selectFrame = (frame: number) => {
     emits("selectFrame", frame)
@@ -43,7 +46,9 @@ const selectFrame = (frame: number) => {
                 </td>
                 <td class="life" :class="'lifeper-' + info.life"></td>
                 <td class="lifestate" :class="{ 'danger': info.danger }"></td>
-                <td class="notes" :class="noteCssClass(info)"></td>
+                <td class="notes">
+                    <div v-for="note in info.notes" class="note" :class="noteCssClass(info)"></div>
+                </td>
                 <td v-if="info.moment % 20 == 0" rowspan="20" class="sec">{{ (info.moment) / 2 + 10 }}
                 </td>
             </tr>
@@ -80,10 +85,31 @@ td {
     }
 
     &.notes {
-        width: 50px;
-        min-width: 50px;
-        background-repeat: repeat-y;
+        width: 80px;
+        min-width: 80px;
+        display: flex;
         border-right: 1px solid #666;
+
+
+
+        .note {
+            width: 5px;
+            height: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+
+            &.notes_perfect {
+                background-color: navy;
+            }
+
+            &.notes_danger,
+            &.notes_miss {
+                background-color: darkorange;
+            }
+
+            &.notes_guard {
+                background-color: darkgray;
+            }
+        }
     }
 
     &.info {

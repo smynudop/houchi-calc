@@ -283,6 +283,7 @@ const wrapMagic = (skill: ISkill): ISkill => {
         return {
             ...ability,
             isMagic: true,
+            isEncoreTarget: false,
             childSkills: []
         }
     }

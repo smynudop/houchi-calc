@@ -113,9 +113,9 @@ export class Unit {
             idol.no = no
             idol.unitno = Math.floor(no / 5)
         }
-
-        const abilities = new AbilityList()
         const logger = new Logger()
+
+        const abilities = new AbilityList(logger)
 
         const momentInfoList: MomentInfo[] = []
         let life = LIFE_DEFAULT
@@ -160,6 +160,7 @@ export class Unit {
                         logger: logger.getInstance(info.no, time)
                     })
                     if (ability?.type == "cristal") {
+                        logger.log("【クリスタル】ライフを200%にします")
                         life += LIFE_DEFAULT
                     }
 
@@ -271,7 +272,9 @@ class AbilityList {
     allList: AbilityLog[] = []
     encoreTargetList: AbilityLog[] = []
     applyTargetList: { [unitno: number]: Ability[] } = {}
-    constructor() {
+    logger: ILogger
+    constructor(logger: ILogger) {
+        this.logger = logger
     }
 
     push(time: number, position: number, ability: Ability | null) {
@@ -303,7 +306,6 @@ class AbilityList {
         let order = [9, 7, 6, 8, 10, 4, 2, 1, 3, 5, 14, 12, 11, 13, 15]
 
         const list = this.encoreTargetList
-            .filter((x) => x.ability != null)
             .filter((x) => x.time < time)
             .sort((a, b) => a.time - b.time || order[b.position] - order[a.position] || 0)
             .reverse()

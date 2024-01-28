@@ -41,29 +41,6 @@ export class Idol {
         this.isEternal = skill.atype == "eternal"
     }
 
-    copy() {
-        return new Idol([this.name, this.attr, this.interval, this.per, this.type])
-    }
-
-    get isdamy() {
-        return this.name == "damy"
-    }
-
-    get isEncore() {
-        return this.type == "encore"
-    }
-
-    get isRefrain() {
-        return this.type == "refrain"
-    }
-
-    get isMagic() {
-        return this.type == "magic"
-    }
-
-    get isCopy() {
-        return this.isEncore || this.isRefrain
-    }
 
     get isRezo() {
         return this.type == "motif"
