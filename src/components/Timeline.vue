@@ -56,7 +56,7 @@ const isSupport = (buff: RequiredBuff | null) => {
     <div class="timeline" @wheel="scroll" ref="timeline">
         <div class="jotai">
             <div class="corner"></div>
-            <div class="block" :class="isDanger(m.finallyBuff) ? 'danger' : ''" v-for="m in momentInfo">
+            <div class="block" :class="m.danger ? 'danger' : ''" v-for="m in momentInfo">
             </div>
         </div>
         <div class="notes">

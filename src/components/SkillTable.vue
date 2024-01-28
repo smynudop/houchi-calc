@@ -12,7 +12,7 @@ const emits = defineEmits<{
     (e: "selectFrame", val: number): void
 }>()
 const noteCssClass = (info: CalcMomentInfo) => {
-    return `notenum_${info.notes.length} notes_${info.judge}`
+    return `notenum_${info.noteLength} notes_${info.judge}`
 }
 const selectFrame = (frame: number) => {
     emits("selectFrame", frame)

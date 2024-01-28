@@ -6,10 +6,18 @@ import { SkillHelper } from "./skillHelper"
 
 
 type SkillList = {
-    moment: number,
+    moment: number
     skillList: (Ability | null)[]
+    danger: boolean
 }
-export type CalcMomentInfo = SkillList
+type MomentInfo = {
+    life: number
+    danger: boolean
+    judge: Judge
+    notes: INoteDetail[]
+    noteLength: number
+}
+export type CalcMomentInfo = SkillList & MomentInfo
 export type CalcRequest = {
     idols: Idol[],
     isGuestRezo: boolean,
@@ -19,6 +27,11 @@ export type CalcRequest = {
 export type CalcResponse = {
     momentInfo: CalcMomentInfo[]
     logs: string[],
+    musicName: string,
+    totalScore: number,
+    unitLife: number,
+    dangerTime: number,
+    maxCombo: number
 }
 
 export class Unit {
@@ -104,18 +117,26 @@ export class Unit {
         const abilities = new AbilityList()
         let logs: string[] = []
 
+        const momentInfoList: MomentInfo[] = []
         let life = 300
         let combo = 0
         const basicValue = this.basicValue(appeal)
-        let score = 0
+        let totalScore = 0
 
         await this.fetch(scorePath)
+
+        type SkillInfo = {
+            unitno: number
+            no: number
+            atime: number
+            skill: ISkill
+        }
 
         const isRezo = this.isRezo(idols, isGuestRezo)
         for (let time = 0; time < MUSIC_MAXTIME; time++) {
             if (time <= this.music.musictime - 3) {
                 const encoreAbility = abilities.getEncoreTarget(time)
-                const executeSkills = idols.filter(i => i.isActiveTiming(time, this.isGrand))
+                const executeSkills: SkillInfo[] = idols.filter(i => i.isActiveTiming(time, this.isGrand))
                     .map(i => {
                         return {
                             unitno: i.unitno,
@@ -140,15 +161,30 @@ export class Unit {
                     abilities.push(time, info.no, ability)
                     matrix.useSkill(time, info.atime, info.no, ability)
 
+                    if (ability?.childSkills != null) {
+                        executeSkills.push(...ability.childSkills.map(s => {
+                            return {
+                                ...info,
+                                skill: s
+                            }
+                        }))
+                    }
+
                 }
             }
 
             for (let m = 0; m < 2; m++) {
                 const moment = time * 2 + m
-                const notes: INoteDetail[] = []
+
+                const notes: INoteDetail[] = this.music.pickNotesByMoment(moment)
                 const momentinfo = matrix.getAbilities(moment)
                 const boost = SkillHelper.calcBoostEffect(momentinfo)
                 const { support, cut } = SkillHelper.calc2(momentinfo, isRezo, boost)
+
+
+                let judge: Judge = "miss"
+                if (support >= 4) judge = "perfect"
+
 
                 //パーフェクトじゃない場合、つながっているノーツを切る
                 if (support < 4) {
@@ -165,8 +201,6 @@ export class Unit {
                 for (const note of notes) {
                     if (note.result == "gone") continue
 
-                    let judge: Judge = "miss"
-                    if (support >= 4) judge = "perfect"
 
                     //ミスの場合、ライフを減らす
                     if (judge == "miss") {
@@ -188,23 +222,29 @@ export class Unit {
                     const judgeKeisu = this.judgeKeisu(judge)
 
                     const noteScore = basicValue * (1 + scoreBonus) * (1 + comboBonus) * comboKeisu * judgeKeisu
-                    score += noteScore
+                    totalScore += noteScore
                 }
+
+                momentInfoList.push({ life, danger: cut < 1, judge, noteLength: notes.length, notes })
 
             }
 
         }
 
         return {
-            // momentInfo: matrix.skillMatrix.map((x, i) => {
-            //     return {
-            //         moment: i,
-            //         skillList: x,
-            //         ...simuRes.momentInfos[i]
-            //     }
-            // }),
-            momentInfo: [],
+            momentInfo: matrix.result.map((r, moment) => {
+                return {
+                    skillList: r,
+                    moment: moment,
+                    ...momentInfoList[moment]
+                }
+            }),
             logs,
+            musicName: this.music.name,
+            totalScore,
+            unitLife: 300,
+            maxCombo: 0,
+            dangerTime: 0
         }
     }
 }
@@ -244,18 +284,6 @@ class AbilityList {
             }
             this.applyTargetList[unitno].push(ability)
         }
-        if (ability.childAbilities != null) {
-            for (const c of ability.childAbilities) {
-                if (c.isApplyTarget) {
-                    const unitno = Math.floor(position / 5)
-                    if (this.applyTargetList[unitno] == undefined) {
-                        this.applyTargetList[unitno] = []
-                    }
-                    this.applyTargetList[unitno].push(ability)
-                }
-            }
-        }
-
     }
 
     getEncoreTarget(time: number) {
@@ -290,14 +318,20 @@ type AbilityInfo = {
 export class Matrix {
     idolnum: 5 | 15
     skillMatrix: AbilityInfo[][]
+    result: (Ability | null)[][]
 
     constructor(idolnum: 5 | 15) {
         this.idolnum = idolnum
 
         this.skillMatrix = []
+        this.result = []
         for (let i = 0; i < MUSIC_MAXTIME * 2; i++) {
             const skills: AbilityInfo[] = []
             this.skillMatrix.push(skills)
+
+            const r = new Array<Ability | null>(idolnum)
+            r.fill(null)
+            this.result.push(r)
         }
     }
 
@@ -315,7 +349,14 @@ export class Matrix {
                 unitno: Math.floor(no / 5),
                 ability
             })
+            if (!ability.isMagic) {
+                this.result[moment][no] = ability
+            }
         }
+    }
+
+    getResult() {
+
     }
 
     getAbilities(moment: number) {

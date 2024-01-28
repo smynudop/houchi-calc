@@ -259,6 +259,26 @@ class Encore implements ISkill {
     }
 }
 
+const wrapMagic = (skill: ISkill): ISkill => {
+    const execute = (prop: SkillExecuteProp): Ability | null => {
+        const ability = skill.execute(prop)
+        if (!ability) return null
+        if (ability.executeType == "magic") {
+            return null
+        }
+
+        return {
+            ...ability,
+            isMagic: true,
+            childSkills: []
+        }
+    }
+    return {
+        ...skill,
+        execute
+    }
+}
+
 class Magic implements ISkill {
     type: ISkillName
     nameja: string
@@ -280,29 +300,18 @@ class Magic implements ISkill {
 
     execute(prop: SkillExecuteProp): Ability | null {
 
-        let executeSkills = prop.magicSkillList.filter((s) => !s.canNOTmagicExecute && s.type != "none")
-
-        const abilities = executeSkills.map((s) => s.execute(prop))
-            .filter((a): a is Ability => a != null)
-            .filter(a => a.executeType != "magic")
-
-        if (abilities.length) {
-            return null
-        }
-
-        const skillNames = abilities.map((s) => s.nameja).join("、")
-        const messages = abilities.map((s) => "[マジック]" + s.message).join("\n")
-
+        const executeSkills = prop.magicSkillList.filter((s) => !s.canNOTmagicExecute && s.type != "none")
+        const skillNames = executeSkills.map(s => s.nameja).join(",")
         return {
             type: this.type,
             nameja: this.nameja,
             executeType: this.type,
-            isMagic: true,
+            isMagic: false,
             isEncoreTarget: true,
             isApplyTarget: false,
-            message: `マジックは${skillNames}を発動しました。\n${messages}`,
+            message: `マジックは${skillNames}を発動しました。`,
             exec: (prop: AbilityExecProp) => { return { name: "magic", nameja: "マジック" } },
-            childAbilities: abilities
+            childSkills: executeSkills.map(s => wrapMagic(s))
         }
     }
 }

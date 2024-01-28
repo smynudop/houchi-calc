@@ -85,7 +85,6 @@ type ISkill = {
     nameja: string
     activeSkill: Buff
     canNOTmagicExecute?: boolean
-    isEncore: boolean
     atype: ATime
     execute(props: SkillExecuteProp): Ability | null
 }
@@ -109,7 +108,7 @@ type Ability = {
     isApplyTarget: boolean
     message: string | null
     exec: AbilityExecute
-    childAbilities?: Ability[]
+    childSkills?: ISkill[]
 }
 type MaybeAbility = Ability | null
 
