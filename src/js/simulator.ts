@@ -365,11 +365,19 @@ export class Simulator {
         let life = 0
         for (let l of this.lifes) {
             life -= l
-            if (start200) life = Math.max(0, life)
+            if (start200) {
+                life = Math.max(0, life)
+            }
             lifeSimu.push(life)
         }
-        let max = Math.max(...lifeSimu) - Math.min(...lifeSimu)
-        let requiredLife = start200 ? Math.floor(max / 2) + 1 : max + 1
+
+        let requiredLife = 0
+        if (start200) {
+            let max = Math.max(...lifeSimu) - Math.min(...lifeSimu)
+            requiredLife = Math.floor(max / 2) + 1
+        } else {
+            requiredLife = Math.max(...lifeSimu) + 1
+        }
         this.unitlife = requiredLife
 
         let unitlife = Math.max(requiredLife, LIFE_DEFAULT)
