@@ -39,7 +39,7 @@ export class Music {
         this.level = data.level ?? 28
         this.difficulity = data.difficulity ?? "master"
         this.musictime = data.musictime ?? 120
-        this.notes = data.notes?.map(n => { return { ...n, score: 0, result: "guard" } }) ?? []
+        this.notes = data.notes?.map(n => { return { ...n, score: 0, result: "unset" } }) ?? []
         this.offset = data.offset ?? 0
         this.longInfo = new Map()
         this.initLongInfo()
@@ -67,7 +67,7 @@ export class Music {
     resetNotes() {
         this.notes.forEach((n) => {
             n.score = 0
-            n.result = "guard"
+            n.result = "unset"
         })
         for (let [k, info] of this.longInfo) {
             info.isContinue = true
@@ -99,6 +99,11 @@ export class Music {
                 let notes = this.notes
                     .filter((n) => n.no == key && n.frame >= frame)
                     .sort((a, b) => a.frame - b.frame)
+
+                for (let i = 0; i < notes.length; i++) {
+                    if (i == 0) notes[i].result = "miss"
+                    else notes[i].result = "gone"
+                }
                 result.push(notes[0])
                 damage += this.getLifeOfNote(notes[0])
             }
@@ -117,6 +122,10 @@ export class Music {
     disConnect(no: number) {
         if (no == 0) return;
         this.longInfo.get(no)!.isContinue = false
+
+        for (const note of this.notes.filter(n => n.no == no)) {
+            if (note.result == "unset") note.result = "gone"
+        }
     }
 
 

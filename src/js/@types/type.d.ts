@@ -1,4 +1,4 @@
-type Judge = "perfect" | "gone" | "guard" | "miss"
+type Judge = "perfect" | "gone" | "miss" | "unset"
 type IAttr = "cu" | "co" | "pa"
 type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp" | "eternal"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"

@@ -1,5 +1,5 @@
 import { Music } from "./simulator"
-import { MUSIC_MAXTIME } from "./data/constants"
+import { LIFE_DEFAULT, MUSIC_MAXTIME } from "./data/constants"
 import { Idol } from "./idol"
 import { SkillHelper } from "./skillHelper"
 
@@ -118,13 +118,14 @@ export class Unit {
         const logger = new Logger()
 
         const momentInfoList: MomentInfo[] = []
-        let life = 300
+        let life = LIFE_DEFAULT
         let combo = 0
+        let maxcombo = 0
         let totalScore = 0
+        let dangerMoment = 0
 
         await this.fetch(scorePath)
         const basicValue = this.basicValue(appeal)
-        console.log(basicValue)
 
         type SkillInfo = {
             unitno: number
@@ -158,6 +159,9 @@ export class Unit {
                         magicSkillList,
                         logger: logger.getInstance(info.no, time)
                     })
+                    if (ability?.type == "cristal") {
+                        life += LIFE_DEFAULT
+                    }
 
 
                     abilities.push(time, info.no, ability)
@@ -181,8 +185,8 @@ export class Unit {
                 const notes: INoteDetail[] = this.music.pickNotesByMoment(moment)
                 const momentinfo = matrix.getAbilities(moment)
                 const boost = SkillHelper.calcBoostEffect(momentinfo)
-                const { support, cut } = SkillHelper.calc2(momentinfo, isRezo, boost)
-
+                let { support, cut } = SkillHelper.calc2(momentinfo, isRezo, boost)
+                cut = Math.min(1.0, cut)
 
                 let judge: Judge = "miss"
                 if (support >= 4) judge = "perfect"
@@ -201,13 +205,13 @@ export class Unit {
                 }
 
                 for (const note of notes) {
-                    if (note.result == "gone") continue
+                    if (note.result == "gone" || note.result == "miss") continue
 
 
                     //ミスの場合、ライフを減らす
                     if (judge == "miss") {
-                        let damage = 0
-                        damage = damage * (1 - cut)
+                        let damage = this.music.getLifeOfNote(note)
+                        damage = Math.floor(damage * (1 - cut))
                         life -= damage
                         this.music.disConnect(note.no)
                     }
@@ -215,19 +219,25 @@ export class Unit {
                     //ライフを回復する
                     const { heal } = SkillHelper.calc2(momentinfo, isRezo, boost)
                     life += heal
+                    life = Math.min(life, LIFE_DEFAULT * 2)
 
                     if (judge == "perfect") combo++
                     else combo = 0
+                    maxcombo = Math.max(maxcombo, combo)
 
-                    const { score: scoreBonus, combo: comboBonus } = SkillHelper.calc2(momentinfo, isRezo, boost, { life, noteType: note.type, judge })
+                    let { score: scoreBonus, combo: comboBonus } = SkillHelper.calc2(momentinfo, isRezo, boost, { life, noteType: note.type, judge })
                     const comboKeisu = this.combobonus(combo)
                     const judgeKeisu = this.judgeKeisu(judge)
+                    if (combo <= 1) comboBonus = 0
 
                     const noteScore = Math.round(basicValue * (1 + scoreBonus / 100) * (1 + comboBonus / 100) * comboKeisu * judgeKeisu)
                     totalScore += noteScore
-                }
 
-                momentInfoList.push({ life, danger: cut < 1, judge, noteLength: notes.length, notes })
+                    console.log(noteScore)
+                }
+                let danger = cut < 1 && support < 4 && moment < this.music.musictime * 2
+                if (danger) dangerMoment++
+                momentInfoList.push({ life: Math.ceil(life / LIFE_DEFAULT * 100), danger, judge, noteLength: notes.length, notes })
 
             }
 
@@ -245,8 +255,8 @@ export class Unit {
             musicName: this.music.name,
             totalScore,
             unitLife: 300,
-            maxCombo: 0,
-            dangerTime: 0
+            maxCombo: maxcombo,
+            dangerTime: dangerMoment / 2
         }
     }
 }

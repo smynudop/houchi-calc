@@ -57,6 +57,6 @@ export const atimes: Record<ATime, Record<string, number>> = {
         "7無": 0,
     },
     eternal: {
-        "1高": 2
+        "1高": 280
     }
 } as const

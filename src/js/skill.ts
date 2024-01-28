@@ -248,10 +248,12 @@ class Encore implements ISkill {
         this.atype = "s"
     }
 
-    execute({ encoreAbility }: SkillExecuteProp): Ability | null {
+    execute({ encoreAbility, logger }: SkillExecuteProp): Ability | null {
         if (encoreAbility == null) {
             return null
         }
+
+        logger.log(`アンコールは${encoreAbility.nameja}を模倣しました`)
 
         return {
             ...encoreAbility,
