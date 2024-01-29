@@ -1,5 +1,6 @@
 import { SkillHelper } from "./skillHelper"
-
+import { SlideAct } from "./skill/slideact"
+import { CuteFocus } from "./skill/focus"
 class Skill implements ISkill {
     type: ISkillName
     nameja: string
@@ -49,41 +50,7 @@ class DummySkill extends Skill {
     }
 }
 
-class SlideAct extends Skill {
 
-    constructor() {
-        super("slideact", "スラアク", { score: 10 }, "ml")
-    }
-
-    execute({ logger }: SkillExecuteProp): Ability | null {
-        const skillEffect: SkillEffect = {
-            name: this.type,
-            nameja: this.nameja,
-            ...this.activeSkill,
-        }
-
-        logger.log(`${this.nameja}が発動しました`)
-
-        const exec = ({ life, noteType }: AbilityExecProp): SkillEffect => {
-            if (noteType == "slide" || noteType == "slideflick") {
-                return { name: "slideact", nameja: "スラアク", score: 40 }
-            } else {
-                return { name: "slideact", nameja: "スラアク", score: 10 }
-            }
-        }
-
-
-        return {
-            type: this.type,
-            nameja: this.nameja,
-            executeType: this.type,
-            isMagic: false,
-            isEncoreTarget: true,
-            isApplyTarget: true,
-            exec,
-        }
-    }
-}
 
 class Cristal extends Skill {
     canNOTmagicExecute?: boolean | undefined = true
@@ -315,7 +282,7 @@ class Magic implements ISkill {
     execute(prop: SkillExecuteProp): Ability | null {
 
 
-        const executeSkills = prop.magicSkillList.filter((s) => !s.canNOTmagicExecute && s.type != "none")
+        const executeSkills = prop.platoonIdols.map(i => i.skill).filter((s) => !s.canNOTmagicExecute && s.type != "none")
         const skillNames = executeSkills.map(s => s.nameja).join(",")
 
         prop.logger.log(`マジックは${skillNames}を発動しました。`)
@@ -355,6 +322,7 @@ export const SkillList: Record<ISkillName, ISkill> = {
 
     combona: new Skill("combona", "コンボナ", { combo: 18 }, "m"),
     coode: new Skill("coode", "コーデ", { score: 10, combo: 15 }, "m"),
+    focus: new CuteFocus(),
 
     encore: new Encore(),
     refrain: new Refrain(),

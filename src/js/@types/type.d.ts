@@ -1,4 +1,4 @@
-type Judge = "perfect" | "gone" | "miss" | "unset"
+type Judge = "perfect" | "great" | "good" | "bad" | "gone" | "miss" | "unset"
 type IAttr = "cu" | "co" | "pa"
 type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp" | "eternal"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"
@@ -29,6 +29,7 @@ const skillNameList = [
 
     "combona",
     "coode",
+    "focus",
 
     "encore",
     "refrain",
@@ -44,6 +45,10 @@ const skillNameList = [
 type ISkillName = typeof skillNameList[number]
 
 
+type IIdol = {
+    skill: ISkill,
+    attr: IAttr
+}
 
 interface LongInfo {
     begin: number
@@ -95,7 +100,7 @@ type ISkill = {
 type SkillExecuteProp = {
     applyTargetAbilities: Ability[]
     encoreAbility: Ability | null
-    magicSkillList: ISkill[],
+    platoonIdols: IIdol[],
     logger: ILogger
 }
 type AbilityExecProp = {

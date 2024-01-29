@@ -2,7 +2,7 @@ import { keyof, atimes } from "./data/data"
 import { cards } from "./data/idol"
 import { SkillList } from "./skill"
 
-export class Idol {
+export class Idol implements IIdol {
     name: string
     attr: IAttr
     interval: number

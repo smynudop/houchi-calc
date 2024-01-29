@@ -151,12 +151,12 @@ export class Unit {
 
                 while (executeSkills.length > 0) {
                     const info = executeSkills.shift()!
-                    const magicSkillList = idols.filter(i => i.unitno == info.unitno).map(i => i.skill)
+                    const platoonIdols = idols.filter(i => i.unitno == info.unitno)
 
                     const ability = info.skill.execute({
                         applyTargetAbilities: abilities.getApplyTarget(info.unitno),
                         encoreAbility,
-                        magicSkillList,
+                        platoonIdols,
                         logger: logger.getInstance(info.no, time)
                     })
                     if (ability?.type == "cristal") {

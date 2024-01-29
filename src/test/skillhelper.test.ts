@@ -65,8 +65,9 @@ it('boost', () => {
 
 })
 
-const boost = SkillList.boost.execute({ applyTargetAbilities: [], encoreAbility: null, magicSkillList: [] })!
-const symfony = SkillList.symfony.execute({ applyTargetAbilities: [], encoreAbility: null, magicSkillList: [] })!
+
+const boost = SkillList.boost.execute({ applyTargetAbilities: [], encoreAbility: null, platoonIdols: [] })!
+const symfony = SkillList.symfony.execute({ applyTargetAbilities: [], encoreAbility: null, platoonIdols: [] })!
 
 it('calcBoostEffect', () => {
     const map = new Map<number, Ability[]>
