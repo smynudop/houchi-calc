@@ -1,6 +1,8 @@
 import { expect, it } from 'vitest';
 import { SkillHelper } from "../js/skillHelper"
 import { SkillList } from '../js/skill';
+import { Logger } from '../js/houchi';
+
 it('max', () => {
     const s1 = SkillHelper.max([
         { score: 17 },
@@ -65,9 +67,9 @@ it('boost', () => {
 
 })
 
-
-const boost = SkillList.boost.execute({ applyTargetAbilities: [], encoreAbility: null, platoonIdols: [] })!
-const symfony = SkillList.symfony.execute({ applyTargetAbilities: [], encoreAbility: null, platoonIdols: [] })!
+const logger = new Logger()
+const boost = SkillList.boost.execute({ applyTargetAbilities: [], encoreAbility: null, platoonIdols: [], logger })!
+const symfony = SkillList.symfony.execute({ applyTargetAbilities: [], encoreAbility: null, platoonIdols: [], logger })!
 
 it('calcBoostEffect', () => {
     const map = new Map<number, Ability[]>

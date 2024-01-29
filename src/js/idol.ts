@@ -46,6 +46,10 @@ export class Idol implements IIdol {
         return this.type == "motif"
     }
 
+    get isdamy() {
+        return this.name == "damy"
+    }
+
     /**
      * 起動タイミングかどうか
      * @param sec 
