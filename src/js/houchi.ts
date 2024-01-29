@@ -234,7 +234,6 @@ export class Unit {
                     const noteScore = Math.round(basicValue * (1 + scoreBonus / 100) * (1 + comboBonus / 100) * comboKeisu * judgeKeisu)
                     totalScore += noteScore
 
-                    console.log(noteScore)
                 }
                 let danger = cut < 1 && support < 4 && moment < this.music.musictime * 2
                 if (danger) dangerMoment++

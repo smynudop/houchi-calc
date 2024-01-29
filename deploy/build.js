@@ -6,5 +6,5 @@ export async function build() {
     await $`git pull`
     await $`npm i`
     await $`npm run build`
-    await $`cp -rf ./dist /var/www/html/deleste`
+    await $`cp -rf ./dist/* /var/www/html/deleste`
 }

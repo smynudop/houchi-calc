@@ -1,7 +1,6 @@
 dist/*.html
 dist/**/*
 dist_old/*
-!dist/material/*
 
 node_modules/
 old/

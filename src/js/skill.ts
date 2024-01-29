@@ -283,6 +283,10 @@ class Magic implements ISkill {
 
 
         const executeSkills = prop.platoonIdols.map(i => i.skill).filter((s) => !s.canNOTmagicExecute && s.type != "none")
+        if (executeSkills.length == 0) {
+            return null
+        }
+
         const skillNames = executeSkills.map(s => s.nameja).join(",")
 
         prop.logger.log(`マジックは${skillNames}を発動しました。`)
