@@ -200,6 +200,7 @@ const load = () => {
 }
 
 const save = () => {
+    units.value[currentUnitIndex.value].idols = currentUnitIdols.value.map(i => i.name)
     localStorage.setItem(storageKey.value, JSON.stringify(units.value.slice()))
 }
 
@@ -212,7 +213,6 @@ const endUnitNameEdit = () => {
 onMounted(async () => {
     load()
     setUnit()
-    calc()
 })
 
 </script>
@@ -285,7 +285,7 @@ onMounted(async () => {
                 </template>
                 <button type="button" @click="resetAll">全リセット</button>
                 <SkillTable :idols="currentUnitIdols" :moment-info="calcResponse?.momentInfo" :selected-no="selectedNo"
-                    @select-frame="selectFrame"></SkillTable>
+                    @select-frame="selectFrame" :life="calcResponse.unitLife"></SkillTable>
             </template>
             <template v-slot:log>
                 <div class="logcontainer">

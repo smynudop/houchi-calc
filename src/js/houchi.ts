@@ -254,7 +254,7 @@ export class Unit {
             logs: logger.logs,
             musicName: this.music.name,
             totalScore,
-            unitLife: 300,
+            unitLife: 264,
             maxCombo: maxcombo,
             dangerTime: dangerMoment / 2
         }

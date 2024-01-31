@@ -17,6 +17,18 @@ export class SkillHelper {
         return result
     }
 
+    static maxRezo(skills: (Buff | null)[], frame: keyof Buff): number | undefined {
+        let result: number | undefined = -9999
+        for (let skill of skills) {
+            if (skill == null) continue
+            const value = skill[frame]
+            if (value == null || value == 0) continue
+            result = Math.max(result, value)
+        }
+        if (result == -9999) result = undefined
+        return result
+    }
+
     static sum(skills: (Buff | null)[], frame: keyof Buff): number {
         let skills2 = skills.filter((s): s is SkillEffect => s != null)
         let result = 0
@@ -67,6 +79,20 @@ export class SkillHelper {
         }
     }
 
+    static calcmaxRezo(skills: Buff[]): Buff {
+        return {
+            support: SkillHelper.maxRezo(skills, "support"),
+            score: SkillHelper.maxRezo(skills, "score"),
+            combo: SkillHelper.maxRezo(skills, "combo"),
+            heal: SkillHelper.maxRezo(skills, "heal"),
+            heal2: SkillHelper.maxRezo(skills, "heal2"),
+            boost: SkillHelper.maxRezo(skills, "boost"),
+            boost2: SkillHelper.maxRezo(skills, "boost2"),
+            cover: SkillHelper.maxRezo(skills, "cover"),
+            cut: SkillHelper.maxRezo(skills, "cut")
+        }
+    }
+
     static combine(skills: Buff[]): Buff {
         return {
             support: SkillHelper.sum(skills, "support"),
@@ -107,20 +133,23 @@ export class SkillHelper {
         }
     }
 
-    static calc2(skills: Map<number, Ability[]>, isRezo: boolean[], boost: BoostEffect2, prop?: AbilityExecProp) {
+    static calc2(skills: Map<number, Ability[]>, isRezo: boolean[], boost: BoostEffect2, prop?: AbilityExecProp, debug?: boolean) {
 
         if (!prop) prop = { life: 0, noteType: "tap", judge: "perfect" }
+        debug ??= false
 
         const effectByPlatoon: Buff[] = []
         for (const [unitno, abilities] of skills) {
             const effects: Buff[] = []
 
             const magicAbilities = abilities.filter(a => a.isMagic)
-            const magicBuff = SkillHelper.calcmax(magicAbilities.map(a => a.exec(prop!)))
+            const magicBuff = SkillHelper.calcmaxRezo(magicAbilities.map(a => a.exec(prop!)))
             effects.push(magicBuff)
 
             const nomagic = abilities.filter(a => !a.isMagic)
             effects.push(...nomagic.map(a => a.exec(prop!)))
+
+            if (debug) console.log(effects)
 
             const rezo = !!isRezo[unitno]
 

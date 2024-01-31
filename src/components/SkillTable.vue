@@ -6,7 +6,8 @@ import { CalcMomentInfo } from "../js/houchi"
 defineProps<{
     idols: Idol[]
     selectedNo: number
-    momentInfo: CalcMomentInfo[]
+    momentInfo: CalcMomentInfo[],
+    life: number
 }>()
 const emits = defineEmits<{
     (e: "selectFrame", val: number): void
@@ -36,7 +37,7 @@ const selectFrame = (frame: number) => {
                 <td v-for="idol, i in idols" class="member" :key="i">
                     <idol-vue @click="selectFrame(i)" :idol="idol" :selected="selectedNo == i" />
                 </td>
-                <td class='menu' id='menu_life'>ライフ</td>
+                <td class='menu' id='menu_life'>ライフ<br>({{ life }})</td>
                 <td class='menu' colspan='2'>ノーツ</td>
                 <td></td>
             </tr>
