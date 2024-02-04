@@ -18,7 +18,8 @@ export default defineConfig({
             input: {
                 skill_grand: "./src/skill_grand.html",
                 skill_normal: "./src/skill_normal.html",
-                gachi_grand: "./src/gachi_grand.html"
+                gachi_grand: "./src/gachi_grand.html",
+                chartEditor: "./src/chartEditor.html"
             }
         }
     },
