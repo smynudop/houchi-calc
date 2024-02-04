@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, defineAsyncComponent, ref } from 'vue'
+import { computed, onMounted, defineAsyncComponent, ref, toRaw } from 'vue'
 
 import NotesArea from './NotesArea.vue';
 //import saraba from "./voyager.json"
@@ -52,12 +52,20 @@ const inputMode = ref<InputMode>("tap")
 const state = ref<State>({ mode: "normal", prevNote: null })
 const group = ref<number>(1)
 const measure = ref<number>(1)
-const notesList = ref<Note[]>([])
 
-const bpm = ref<number>(120)
-const offset = ref<number>(0)
+const music = ref<IMusicV2>({
+  version: 2,
+  name: "",
+  bpm: 120,
+  offset: 0,
+  difficulity: 'master',
+  level: 28,
+  musictime: 120,
+  notes: []
+})
+const notesList = ref<NoteV2[]>([])
 
-const setNotes = (notes: Note[]) => {
+const setNotes = (notes: NoteV2[]) => {
   notesList.value = notes.slice()
   group.value = notesList.value.reduce((a, b) => Math.max(a, b.no), 0) + 1
 }
@@ -79,7 +87,7 @@ const measureDown = () => {
 }
 
 
-const isSamePositionNote = (note1: Readonly<Note>, note2: Readonly<Note>): boolean => {
+const isSamePositionNote = (note1: Readonly<NoteV2>, note2: Readonly<NoteV2>): boolean => {
   return note1.measure == note2.measure
     //&& note1.notesType == note2.notesType 
     && note1.lane == note2.lane
@@ -87,7 +95,7 @@ const isSamePositionNote = (note1: Readonly<Note>, note2: Readonly<Note>): boole
   //&& note1.group == note2.group
 }
 
-const isSameTimingNote = (note1: Readonly<Note>, note2: Readonly<Note>): boolean => {
+const isSameTimingNote = (note1: Readonly<NoteV2>, note2: Readonly<NoteV2>): boolean => {
   return note1.measure == note2.measure
     //&& note1.notesType == note2.notesType 
     //&& note1.pos.lane == note2.pos.lane 
@@ -95,19 +103,19 @@ const isSameTimingNote = (note1: Readonly<Note>, note2: Readonly<Note>): boolean
     && note1.no == note2.no
 }
 
-const existNote = (note: Note) => {
+const existNote = (note: NoteV2) => {
   return notesList.value.some(x => isSamePositionNote(x, note))
 }
 
-const removeNote = (note: Note) => {
+const removeNote = (note: NoteV2) => {
   notesList.value = notesList.value.filter(x => !isSamePositionNote(x, note))
 }
 
-const removeSameTimingNote = (note: Note) => {
+const removeSameTimingNote = (note: NoteV2) => {
   notesList.value = notesList.value.filter(x => !(isSameTimingNote(x, note) && x.type == "slide"))
 }
 
-const position = (note: Note) => {
+const position = (note: NoteV2) => {
   return note.measure * 100 + note.timing
 }
 
@@ -118,11 +126,12 @@ const onAreaClick = (pos: Pos) => {
   if ((inputMode.value == "flick_left" || inputMode.value == "flick_right" || inputMode.value == "flick_left2" || inputMode.value == "flick_right2")
     && state.value.mode == "normal") g = 0
 
-  const tmpNote: Note = {
+  const tmpNote: NoteV2 = {
     measure: measure.value,
     type: inputModeList.find(x => x.name == inputMode.value)!.note,
     ...pos,
-    no: g
+    no: g,
+    frame: 0
   }
 
   switch (inputMode.value) {
@@ -268,7 +277,7 @@ const onWheel = (ev: WheelEvent) => {
 }
 
 const displayNotes = computed((): DisplayNote[] => {
-  const notes: DisplayNote[] = notesList.value.filter(x => x.measure == measure.value)
+  const notes: DisplayNote[] = notesList.value.filter(x => x.measure == measure.value).map(n => { return { ...toRaw(n) } })
 
   for (const note of notes) {
     if (note.no == 0) continue
@@ -303,7 +312,8 @@ const copyNotes = (num: number) => {
       timing: note.timing,
       measure: note.measure + num,
       type: note.type,
-      no: map[note.no]
+      no: map[note.no],
+      frame: 0
     })
   }
 
@@ -311,8 +321,10 @@ const copyNotes = (num: number) => {
 }
 
 const secLine = computed(() => {
-  const a = measure.value * 4 / bpm.value * 60 + (offset.value / 60)
-  const b = (measure.value + 1) * 4 / bpm.value * 60 + (offset.value / 60)
+  if (music.value.bpm == 0) return []
+
+  const a = measure.value * 4 / music.value.bpm * 60 + (music.value.offset / 60)
+  const b = (measure.value + 1) * 4 / music.value.bpm * 60 + (music.value.offset / 60)
 
   const result: { sec: number, timing: number }[] = []
 
@@ -333,20 +345,30 @@ const secLine = computed(() => {
 
 })
 
-const output = () => {
-  const data = JSON.stringify(notesList.value.map(x => {
-    return {
-      lane: x.lane,
-      timing: x.timing,
-      measure: x.measure,
-      type: x.type,
-      no: x.no
-    }
-  }))
+const calcFrame = (bpm: number, offset: number, note: NoteV2) => {
+  const measureMs = 60 * 1000 / bpm * 4
+  const ms = measureMs * (note.measure + note.timing / 48)
+  const frame = ms / 1000 * 60
+  return Math.round(frame * 10) / 10
+}
 
-  const blob = new Blob([data], { type: 'text/plain' }); // Blob オブジェクトの作成
+const output = () => {
+  let data: IMusicV2 = toRaw(music.value)
+  const notes = toRaw(notesList.value)
+  for (let note of notes) {
+    note.frame = calcFrame(data.bpm, data.offset, note)
+  }
+  data = {
+    ...data,
+    notes
+  }
+
+  const datastring = JSON.stringify(data)
+
+  const blob = new Blob([datastring], { type: 'text/plain' }); // Blob オブジェクトの作成
   const link = document.querySelector("#dllink") as any
   link.href = URL.createObjectURL(blob); // オブジェクト URL を生成
+  link.download = `${data.name || "score"}.json`
   link.click(); // クリックイベントを発生させる
   URL.revokeObjectURL(link.href); // オブジェクト URL を解放」
 }
@@ -372,8 +394,13 @@ const fileChange = (e: Event) => {
     try {
       const result = filereader.result as string
       console.log(result)
-      const notes = JSON.parse(result) as Note[]
-      setNotes(notes)
+      const data = JSON.parse(result) as NoteV2[] | IMusicV2
+      if (Array.isArray(data)) {
+        setNotes(data)
+      } else {
+        music.value = data
+        setNotes(data.notes)
+      }
     } catch (e) {
       alert(e)
     }
@@ -411,11 +438,7 @@ const fileChange = (e: Event) => {
             </label>
           </template>
         </div>
-        <div class="p-2">
-          BPM: <input name="bpm" v-model="bpm" type="number" />
-          OFFSET: <input name="offset" v-model="offset" type="number" />
-          表示 <input v-model="displaySecLine" type="checkbox" />
-        </div>
+
         <div class="p-2">
           <template v-for="nm in inputModeList">
             <input type="radio" :id="'notemode_' + nm.name" class="btn-check" :value="nm.name" v-model="inputMode" />
@@ -435,6 +458,45 @@ const fileChange = (e: Event) => {
         </div>
         <div class="p-2">
           <input type="file" @change="fileChange">
+        </div>
+        <div class="p-2">
+          <div class="row">
+            <label class="col-sm-3">曲名</label>
+            <div class="col-sm-9">
+              <input v-model="music.name" type="text" />
+            </div>
+          </div>
+          <div class="row">
+            <label class="col-sm-3">BPM</label>
+            <div class="col-sm-9">
+              <input v-model="music.bpm" type="number" />
+            </div>
+          </div>
+          <div class="row">
+            <label class="col-sm-3">offset </label>
+            <div class="col-sm-9">
+              <input v-model="music.offset" type="number" />
+            </div>
+          </div>
+          <div class="row">
+            <label class="col-sm-3">レベル </label>
+            <div class="col-sm-9">
+              <input v-model="music.level" type="number" />
+            </div>
+          </div>
+          <div class="row">
+            <label class="col-sm-3">曲の長さ </label>
+            <div class="col-sm-9">
+              <input v-model="music.musictime" type="number" />
+            </div>
+          </div>
+          <div class="row">
+            <label class="col-sm-3">難易度 </label>
+            <div class="col-sm-9">
+              <input v-model="music.difficulity" type="text" />
+            </div>
+          </div>
+          秒数の線を表示 <input v-model="displaySecLine" type="checkbox" />
         </div>
       </div>
 

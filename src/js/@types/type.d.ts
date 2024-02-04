@@ -141,3 +141,14 @@ type IMusic = {
     musictime: number
     notes: INote[]
 }
+
+type IMusicV2 = {
+    version: 2
+    name: string
+    bpm: number
+    difficulity: IDifficult
+    level: number
+    offset: number
+    musictime: number
+    notes: NoteV2[]
+}

@@ -104,7 +104,7 @@ const calcY = (note: Pos) => {
   return FRAME_Y - (note.timing * (MEASURE_Y / RESOLUTION) + PADDING_Y)
 }
 
-const calcY2 = (basisNote: Note, targetNote: Note) => {
+const calcY2 = (basisNote: NoteV2, targetNote: NoteV2) => {
   const timing = (targetNote.measure - basisNote.measure) * 48 + targetNote.timing
   return calcY({ lane: targetNote.lane, timing: timing })
 }

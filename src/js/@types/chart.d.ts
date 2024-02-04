@@ -3,17 +3,18 @@ type Pos = {
     timing: number
 }
 
-type Note = {
+type NoteV2 = {
     lane: number,
     timing: number,
     measure: number,
     type: NoteType,
-    no: number
+    no: number,
+    frame: number
 }
 
-type DisplayNote = Note & {
-    prevNote?: Note,
-    nextNote?: Note
+type DisplayNote = NoteV2 & {
+    prevNote?: NoteV2,
+    nextNote?: NoteV2
 }
 
 type NormalState = {
@@ -23,12 +24,12 @@ type NormalState = {
 
 type LongState = {
     mode: "long",
-    prevNote: Note
+    prevNote: NoteV2
 }
 
 type SlideState = {
     mode: "slide",
-    prevNote: Note
+    prevNote: NoteV2
 }
 
 type State = NormalState | LongState | SlideState
