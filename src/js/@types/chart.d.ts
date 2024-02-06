@@ -3,20 +3,6 @@ type Pos = {
     timing: number
 }
 
-type NoteV2 = {
-    lane: number,
-    timing: number,
-    measure: number,
-    type: NoteType,
-    no: number,
-    frame: number
-}
-
-type DisplayNote = NoteV2 & {
-    prevNote?: NoteV2,
-    nextNote?: NoteV2
-}
-
 type NormalState = {
     mode: "normal",
     prevNote: null
@@ -37,10 +23,13 @@ type State = NormalState | LongState | SlideState
 type NoteType = "tap"
     | "long"
     | "slide"
+    | "flick"
     | "flick_left"
     | "flick_right"
+    | "longflick"
     | "longflick_left"
     | "longflick_right"
+    | "slideflick"
     | "slideflick_left"
     | "slideflick_right"
 

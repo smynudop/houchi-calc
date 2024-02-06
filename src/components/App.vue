@@ -10,6 +10,7 @@ import Tabs from "./Tabs.vue"
 import SkillTable from "./SkillTable.vue"
 import Markdown from "./Markdown.vue";
 import Timeline from "./Timeline.vue";
+import NotesArea from "./NotesArea.vue";
 
 const props = withDefaults(defineProps<{
     isGrand: boolean,
@@ -25,7 +26,7 @@ const tabs = [
     { id: "unitDetail", name: "発動詳細" },
     { id: "log", name: "発動ログ" },
     { id: "usage", name: "つかいかた" },
-
+    { id: "chart", name: "譜面(β)" },
 ]
 
 const scores = getScoreList(props.isGrand)
@@ -91,9 +92,13 @@ const calcResponse = ref<CalcResponse>({
     logs: [],
     musicName: "",
     totalScore: 0,
+    bpm: 0,
+    offset: 0,
     unitLife: 0,
     dangerTime: 0,
-    maxCombo: 0
+    maxCombo: 0,
+    notes: [],
+    version: 1
 })
 
 const setUnit = () => {
@@ -294,6 +299,13 @@ onMounted(async () => {
             </template>
             <template v-slot:usage>
                 <Markdown v-html="usage" />
+            </template>
+            <template #chart>
+                <template v-if="calcResponse?.notes != null">
+                    <NotesArea :mode="8" :bpm="calcResponse.bpm" :offset="calcResponse.offset" :notes="calcResponse?.notes"
+                        :idols="currentUnitIdols" :moment-info="calcResponse.momentInfo" :readonly="true">
+                    </NotesArea>
+                </template>
             </template>
         </Tabs>
     </main>

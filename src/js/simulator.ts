@@ -23,6 +23,7 @@ const getLiveType = (difficulity: IDifficult): ILiveType => {
 }
 
 export class Music {
+    version: 1 | 2
     level: number
     name: string
     coefficient: number
@@ -30,16 +31,19 @@ export class Music {
     liveType: ILiveType
     decreaseLife: DecreaseLife
     musictime: number
-    notes: INoteDetail[]
+    notes: INoteDetail[] | INoteV2Detail[]
+    bpm: number
     offset: number
     longInfo: Map<Number, LongInfo>
 
-    constructor(data: Partial<IMusic>) {
+    constructor(data: Partial<IMusic | IMusicV2>) {
+        this.version = data.version ?? 1
         this.name = data.name ?? ""
         this.level = data.level ?? 28
         this.difficulity = data.difficulity ?? "master"
         this.musictime = data.musictime ?? 120
-        this.notes = data.notes?.map(n => { return { ...n, score: 0, result: "unset" } }) ?? []
+        this.notes = data.notes?.map(n => { return { ...n, score: 0, result: "unset", buff: {} } }) ?? []
+        this.bpm = data.bpm ?? 120
         this.offset = data.offset ?? 0
         this.longInfo = new Map()
         this.initLongInfo()
@@ -74,8 +78,12 @@ export class Music {
         }
     }
 
-    getLifeOfNote(note: INote) {
-        return this.decreaseLife[note.type]
+    getLifeOfNote(note: INote): number {
+        const result = this.decreaseLife[note.type]
+        if (result === undefined) {
+            throw new Error(`ノーツ種類${note.type}に対応するライフのデータがありません`)
+        }
+        return result
     }
 
     frame(moment: number) {

@@ -3,7 +3,6 @@ type IAttr = "cu" | "co" | "pa"
 type ATime = "l" | "ml" | "m" | "ms" | "s" | "sp" | "eternal"
 type IDifficult = "debut" | "regular" | "pro" | "master" | "master+" | "witch" | "piano" | "forte"
 type ILiveType = "normal" | "grand"
-type INoteType = "tap" | "flick_left" | "flick_right" | "flick" | "long" | "slide" | "longflick" | "slideflick"
 type ISkillFrame = "score" | "combo" | "heal" | "heal2" | "support" | "boost" | "boost2" | "cover" | "cut"
 
 const skillNameList = [
@@ -71,7 +70,7 @@ type BoostEffect = {
 }
 
 type DecreaseLife = {
-    [k in INoteType]: number
+    [k in NoteType]: number
 }
 
 type Buff = {
@@ -105,7 +104,7 @@ type SkillExecuteProp = {
 }
 type AbilityExecProp = {
     life: number
-    noteType: INoteType
+    noteType: NoteType
     judge: Judge
 }
 type AbilityExecute = (prop: AbilityExecProp) => SkillEffect
@@ -125,15 +124,18 @@ type MaybeAbility = Ability | null
 type FinallyAbility = (prop: AbilityExecProp) => RequiredBuff
 
 interface INote {
-    type: INoteType
+    type: NoteType
     no: number
     frame: number
 }
 type INoteDetail = INote & {
     score: number,
     result: Judge
+    buff: Buff
 }
 type IMusic = {
+    version?: 1
+    bpm?: number
     name: string
     difficulity: IDifficult
     level: number
@@ -151,4 +153,20 @@ type IMusicV2 = {
     offset: number
     musictime: number
     notes: NoteV2[]
+}
+
+
+type NoteV2 = {
+    lane: number,
+    timing: number,
+    measure: number,
+    type: NoteType,
+    no: number,
+    frame: number
+}
+
+type INoteV2Detail = NoteV2 & {
+    score: number,
+    result: Judge,
+    buff: Buff
 }

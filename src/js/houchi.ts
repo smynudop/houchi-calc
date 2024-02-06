@@ -8,13 +8,12 @@ import { SkillHelper } from "./skillHelper"
 type SkillList = {
     moment: number
     skillList: (Ability | null)[]
-    danger: boolean
 }
 type MomentInfo = {
     life: number
     danger: boolean
     judge: Judge
-    notes: INoteDetail[]
+    notes: INoteDetail[] | INoteV2Detail[]
     noteLength: number
 }
 export type CalcMomentInfo = SkillList & MomentInfo
@@ -25,13 +24,17 @@ export type CalcRequest = {
     scorePath: string,
 }
 export type CalcResponse = {
+    version: 1 | 2
+    bpm: number
+    offset: number
     momentInfo: CalcMomentInfo[]
     logs: string[],
     musicName: string,
     totalScore: number,
     unitLife: number,
     dangerTime: number,
-    maxCombo: number
+    maxCombo: number,
+    notes?: INoteV2Detail[]
 }
 
 export class Unit {
@@ -183,7 +186,7 @@ export class Unit {
             for (let m = 0; m < 2; m++) {
                 const moment = time * 2 + m
 
-                const notes: INoteDetail[] = this.music.pickNotesByMoment(moment)
+                const notes = this.music.pickNotesByMoment(moment)
                 const momentinfo = matrix.getAbilities(moment)
                 const boost = SkillHelper.calcBoostEffect(momentinfo)
                 let { support, cut } = SkillHelper.calc2(momentinfo, isRezo, boost)
@@ -226,12 +229,16 @@ export class Unit {
                     else combo = 0
                     maxcombo = Math.max(maxcombo, combo)
 
-                    let { score: scoreBonus, combo: comboBonus } = SkillHelper.calc2(momentinfo, isRezo, boost, { life, noteType: note.type, judge })
+                    let buff = SkillHelper.calc2(momentinfo, isRezo, boost, { life, noteType: note.type, judge })
+                    let { score: scoreBonus, combo: comboBonus } = buff
                     const comboKeisu = this.combobonus(combo)
                     const judgeKeisu = this.judgeKeisu(judge)
                     if (combo <= 1) comboBonus = 0
 
                     const noteScore = Math.round(basicValue * (1 + scoreBonus / 100) * (1 + comboBonus / 100) * comboKeisu * judgeKeisu)
+                    note.score = noteScore
+                    note.result = judge
+                    note.buff = buff
                     totalScore += noteScore
 
                 }
@@ -244,6 +251,9 @@ export class Unit {
         }
 
         return {
+            version: this.music.version,
+            bpm: this.music.bpm,
+            offset: this.music.offset,
             momentInfo: matrix.result.map((r, moment) => {
                 return {
                     skillList: r,
@@ -256,7 +266,8 @@ export class Unit {
             totalScore,
             unitLife: 264,
             maxCombo: maxcombo,
-            dangerTime: dangerMoment / 2
+            dangerTime: dangerMoment / 2,
+            notes: this.music.version == 2 ? (this.music.notes as INoteV2Detail[]) : []
         }
     }
 }
@@ -357,6 +368,9 @@ export class Matrix {
 
         for (let d = 0; d < mDuration; d++) {
             let moment = time * 2 + d
+            if (moment >= this.skillMatrix.length) {
+                break;
+            }
             this.skillMatrix[moment].push({
                 no,
                 unitno: Math.floor(no / 5),

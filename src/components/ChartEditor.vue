@@ -276,25 +276,6 @@ const onWheel = (ev: WheelEvent) => {
   }
 }
 
-const displayNotes = computed((): DisplayNote[] => {
-  const notes: DisplayNote[] = notesList.value.filter(x => x.measure == measure.value).map(n => { return { ...toRaw(n) } })
-
-  for (const note of notes) {
-    if (note.no == 0) continue
-
-    const sameGroupNotes = notesList.value.filter(x => x.no == note.no)
-
-    sameGroupNotes.sort((a, b) => {
-      return position(a) - position(b)
-    })
-
-    note.prevNote = sameGroupNotes.filter(x => position(x) < position(note)).reverse()[0]
-    note.nextNote = sameGroupNotes.filter(x => position(x) > position(note))[0]
-  }
-
-  return notes
-})
-
 const copyNotes = (num: number) => {
   const targetNotes = notesList.value.filter(x => x.measure >= measure.value - num && x.measure < measure.value)
   const groupList = [... new Set(targetNotes.map(x => x.no))].filter(x => x != 0).sort()
@@ -320,30 +301,6 @@ const copyNotes = (num: number) => {
 
 }
 
-const secLine = computed(() => {
-  if (music.value.bpm == 0) return []
-
-  const a = measure.value * 4 / music.value.bpm * 60 + (music.value.offset / 60)
-  const b = (measure.value + 1) * 4 / music.value.bpm * 60 + (music.value.offset / 60)
-
-  const result: { sec: number, timing: number }[] = []
-
-
-  let s = Math.floor(a)
-  while (s <= b) {
-
-    if (a <= s && s <= b) {
-      const timing = Math.round((s - a) / (b - a) * 48 * 10) / 10
-      result.push({ sec: s, timing })
-    }
-
-    s += 0.5
-  }
-
-  return result
-
-
-})
 
 const calcFrame = (bpm: number, offset: number, note: NoteV2) => {
   const measureMs = 60 * 1000 / bpm * 4
@@ -423,8 +380,8 @@ const fileChange = (e: Event) => {
           <button type="button" class="btn btn-outline-info" @click="measureUp">↑</button>
           <button type="button" class="btn btn-outline-info" @click="measureDown">↓</button>
         </div>
-        <NotesArea :mode="mode" :notes="displayNotes" :secs="secLine" :displaySecLine="displaySecLine"
-          @click="onAreaClick" @rightclick="onAreaRightClick" @wheel="onWheel" />
+        <NotesArea :mode="mode" :notes="notesList" :bpm="music.bpm" :offset="music.offset" @click="onAreaClick"
+          @rightclick="onAreaRightClick" @wheel="onWheel" />
 
       </div>
       <div class="col-6">

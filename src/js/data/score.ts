@@ -5,6 +5,7 @@ export const SCORES_NORMAL = [
     { name: "ドレミファクトリー！[pro]", path: "./score/doremi.json" },
     { name: "美に入り彩を穿つ[pro]", path: "./score/bisai.json" },
     { name: "ミラーボール・ラブ[mas]", path: "./score/mirror.json" },
+    { name: "ミラーボール・ラブv2[mas]", path: "./score/mirror_V2.json" },
     { name: "ビートシューター[mas]", path: "./score/beat_new.json" },
     { name: "サラバ[mas+]", path: "./score/saraba.json" }
 ]

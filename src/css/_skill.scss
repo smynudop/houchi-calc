@@ -1,32 +1,37 @@
 /* 特技系 ここから */
 
+@mixin bg($color) {
+    background-color: $color;
+    fill: rgba($color, 0.3);
+}
+
 .support,
 .rsupport {
-    background-color: orange;
+    @include bg(orange);
 }
 
 .tuning {
-    background-color: gold;
+    @include bg(gold);
 }
 
 .guard,
 .ssrguard {
-    background-color: rgb(107, 226, 214);
+    @include bg(rgb(107, 226, 214));
 }
 
 .boost {
-    background-color: #f74343;
+    @include bg(#f74343);
     color: white;
 }
 
 .srboost {
-    background-color: tomato;
+    @include bg(tomato);
     color: white;
 }
 
 .symfony,
 .ensemble {
-    background-color: crimson;
+    @include bg(crimson);
     color: white;
 }
 
@@ -41,61 +46,61 @@
 }
 
 .rezo {
-    background-color: indigo;
+    @include bg(indigo);
 }
 
 .slideact {
-    background-color: purple;
+    @include bg(purple);
     color: white;
 }
 
 .coode {
-    background-color: violet;
+    @include bg(violet);
 }
 
 .synergy {
-    background-color: hotpink;
+    @include bg(hotpink);
 }
 
 .allround {
-    background-color: rgb(115, 202, 155);
+    @include bg(rgb(115, 202, 155));
 }
 
 .heal {
-    background: green;
+    @include bg( green);
     color: white;
 }
 
 .combona {
-    background-color: sienna;
+    @include bg(sienna);
     color: white;
 }
 
 .concent {
-    background-color: #4046ff;
+    @include bg(#4046ff);
     color: white;
 }
 
 .motif {
-    background-color: #3433a3;
+    @include bg(#3433a3);
     color: white;
 }
 
 .encore {
-    background-color: var(--bg-color);
+    @include bg(var(--bg-color));
 }
 
 .refrain {
-    background-color: silver;
+    @include bg(silver);
 }
 
 .alternate,
 .mutual {
-    background-color: pink;
+    @include bg(pink);
 }
 
 .cristal{
-    background-color: rgb(119, 233, 214);
+    @include bg(rgb(119, 233, 214));
 }
 
 /* スキルここまで */
